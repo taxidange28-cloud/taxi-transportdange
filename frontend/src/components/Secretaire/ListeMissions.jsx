@@ -3,6 +3,7 @@ import { getMissions, deleteMission, getChauffeurs } from '../../services/api';
 import api from '../../services/api';
 import Button from '../Common/Button';
 import Card from '../Common/Card';
+import { useToast, ToastContainer } from '../Common/NotificationToast';
 import { Edit, Trash2, Send, Filter, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
@@ -12,6 +13,7 @@ const ListeMissions = () => {
   const [chauffeurs, setChauffeurs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const { toasts, showToast, removeToast } = useToast();
   const [filters, setFilters] = useState({
     statut: '',
     date_debut: format(new Date(), 'yyyy-MM-dd'),
@@ -45,9 +47,10 @@ const ListeMissions = () => {
     try {
       await deleteMission(id);
       setMissions(missions.filter(m => m.id !== id));
+      showToast('Mission supprimée avec succès', 'success');
     } catch (error) {
       console.error('Erreur suppression mission:', error);
-      alert('Erreur lors de la suppression');
+      showToast('Erreur lors de la suppression de la mission', 'error');
     }
   };
 
@@ -69,10 +72,10 @@ const ListeMissions = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      alert('✅ Export Excel réussi !');
+      showToast('Export Excel réussi !', 'success');
     } catch (error) {
       console.error('Erreur export:', error);
-      alert('❌ Erreur lors de l\'export Excel. Vérifiez que le serveur supporte cette fonctionnalité.');
+      showToast('Erreur lors de l\'export Excel. Vérifiez que le serveur supporte cette fonctionnalité.', 'error', 7000);
     } finally {
       setExporting(false);
     }
@@ -216,6 +219,9 @@ const ListeMissions = () => {
           })}
         </div>
       )}
+      
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

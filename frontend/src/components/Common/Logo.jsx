@@ -13,7 +13,7 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
     sm: 'h-8 w-8',
     md: 'h-12 w-12',
     lg: 'h-16 w-16',
-    xl: 'h-30 w-30'
+    xl: 'h-32 w-32'
   };
 
   const textSizes = {
@@ -36,7 +36,7 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
       {showText && (
         <div className="flex flex-col">
           <h1 className={`${textSize} font-bold text-primary leading-tight`}>
-            <span className="hidden xs:inline">Transport </span>DanGE
+            <span className="hidden sm:inline">Transport </span>DanGE
           </h1>
           <span className="text-xs text-gray-500 hidden sm:block">
             Taxi Dunois
