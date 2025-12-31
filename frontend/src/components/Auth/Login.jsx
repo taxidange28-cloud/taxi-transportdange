@@ -5,6 +5,7 @@ import { login as loginApi } from '../../services/api';
 import Button from '../Common/Button';
 import Input from '../Common/Input';
 import Card from '../Common/Card';
+import Logo from '../Common/Logo';
 import { AlertCircle } from 'lucide-react';
 
 const Login = () => {
@@ -52,13 +53,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-primary-light flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-light via-secondary to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card>
+        <Card className="shadow-2xl">
           <div className="text-center mb-8">
-            <div className="text-5xl mb-2">🚕</div>
-            <h1 className="text-3xl font-bold text-primary mb-2">Transport DanGE</h1>
-            <p className="text-gray-600">Connexion à l'application</p>
+            <div className="flex justify-center mb-4">
+              <Logo size="xl" showText={false} />
+            </div>
+            <h1 className="text-3xl font-bold text-primary mb-1">Transport DanGE</h1>
+            <p className="text-lg text-gray-600 font-medium">Taxi Dunois</p>
+            <p className="text-sm text-gray-500 mt-2">Connexion à l'application</p>
           </div>
 
           {error && (

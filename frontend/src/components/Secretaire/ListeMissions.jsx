@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getMissions, deleteMission, getChauffeurs } from '../../services/api';
+import api from '../../services/api';
 import Button from '../Common/Button';
 import Card from '../Common/Card';
-import { Edit, Trash2, Send, Filter } from 'lucide-react';
+import { Edit, Trash2, Send, Filter, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
 
@@ -10,6 +11,7 @@ const ListeMissions = () => {
   const [missions, setMissions] = useState([]);
   const [chauffeurs, setChauffeurs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [filters, setFilters] = useState({
     statut: '',
     date_debut: format(new Date(), 'yyyy-MM-dd'),
@@ -49,6 +51,33 @@ const ListeMissions = () => {
     }
   };
 
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      const response = await api.get('/export/excel', {
+        params: filters,
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `missions-${format(new Date(), 'yyyy-MM-dd-HHmm')}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      alert('✅ Export Excel réussi !');
+    } catch (error) {
+      console.error('Erreur export:', error);
+      alert('❌ Erreur lors de l\'export Excel. Vérifiez que le serveur supporte cette fonctionnalité.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const getStatutBadge = (statut) => {
     const badges = {
       brouillon: { label: 'Brouillon', color: 'bg-gray-200 text-gray-800' },
@@ -77,6 +106,14 @@ const ListeMissions = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Liste des missions</h2>
+        <Button
+          onClick={handleExportExcel}
+          disabled={exporting || missions.length === 0}
+          className="flex items-center space-x-2"
+        >
+          <Download className="w-4 h-4" />
+          <span>{exporting ? 'Export en cours...' : '📥 Exporter Excel'}</span>
+        </Button>
       </div>
 
       {/* Filtres */}

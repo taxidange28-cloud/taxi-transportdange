@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "transport-dange-frontend",
+  "description": "Application de gestion Transport DanGE - Taxi Dunois",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
