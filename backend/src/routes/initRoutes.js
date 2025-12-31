@@ -16,7 +16,7 @@ router.post('/init-db', async (req, res) => {
     console.error('❌ Erreur lors de l\'initialisation :', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Erreur lors de l\'initialisation de la base de données'
     });
   }
 });

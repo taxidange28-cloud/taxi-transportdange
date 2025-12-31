@@ -38,11 +38,13 @@ async function initDatabase() {
       { username: 'autre', nom: 'Autre' },
     ];
 
+    const chauffeurIds = [];
     for (const chauffeur of chauffeurs) {
-      await pool.query(
-        'INSERT INTO chauffeurs (username, password, nom) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING',
+      const result = await pool.query(
+        'INSERT INTO chauffeurs (username, password, nom) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password RETURNING id',
         [chauffeur.username, hashedPassword, chauffeur.nom]
       );
+      chauffeurIds.push(result.rows[0].id);
       console.log(`✅ Chauffeur créé: ${chauffeur.username} / ChangezMoi123!`);
     }
     console.log('');
@@ -50,10 +52,10 @@ async function initDatabase() {
     // Insérer des véhicules d'exemple
     console.log('🚗 Insertion des véhicules...');
     const vehicules = [
-      { immatriculation: 'AA-123-BB', modele: 'Peugeot 508', chauffeur_id: 1 },
-      { immatriculation: 'CC-456-DD', modele: 'Renault Talisman', chauffeur_id: 2 },
-      { immatriculation: 'EE-789-FF', modele: 'Citroën C5', chauffeur_id: 3 },
-      { immatriculation: 'GG-012-HH', modele: 'Skoda Superb', chauffeur_id: 4 },
+      { immatriculation: 'AA-123-BB', modele: 'Peugeot 508', chauffeur_id: chauffeurIds[0] },
+      { immatriculation: 'CC-456-DD', modele: 'Renault Talisman', chauffeur_id: chauffeurIds[1] },
+      { immatriculation: 'EE-789-FF', modele: 'Citroën C5', chauffeur_id: chauffeurIds[2] },
+      { immatriculation: 'GG-012-HH', modele: 'Skoda Superb', chauffeur_id: chauffeurIds[3] },
     ];
 
     for (const vehicule of vehicules) {
