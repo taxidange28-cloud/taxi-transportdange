@@ -20,6 +20,14 @@ const NotificationToast = ({
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
 
+  const handleClose = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      if (onClose) onClose();
+    }, 300); // Match animation duration
+  };
+
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
@@ -28,15 +36,7 @@ const NotificationToast = ({
 
       return () => clearTimeout(timer);
     }
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setIsVisible(false);
-      if (onClose) onClose();
-    }, 300); // Match animation duration
-  };
+  }, [duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isVisible) return null;
 

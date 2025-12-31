@@ -104,15 +104,17 @@ const ListeMissions = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Liste des missions</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Liste des missions</h2>
         <Button
           onClick={handleExportExcel}
           disabled={exporting || missions.length === 0}
-          className="flex items-center space-x-2"
+          size="sm"
+          className="flex items-center space-x-2 w-full sm:w-auto"
         >
           <Download className="w-4 h-4" />
-          <span>{exporting ? 'Export en cours...' : '📥 Exporter Excel'}</span>
+          <span className="hidden sm:inline">{exporting ? 'Export...' : '📥 Exporter Excel'}</span>
+          <span className="sm:hidden">{exporting ? 'Export...' : '📥 Excel'}</span>
         </Button>
       </div>
 

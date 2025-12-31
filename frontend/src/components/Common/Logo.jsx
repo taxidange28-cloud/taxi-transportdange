@@ -17,26 +17,26 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
   };
 
   const textSizes = {
-    sm: 'text-lg',
-    md: 'text-xl',
-    lg: 'text-2xl',
-    xl: 'text-3xl'
+    sm: 'text-base sm:text-lg',
+    md: 'text-lg sm:text-xl',
+    lg: 'text-xl sm:text-2xl',
+    xl: 'text-2xl sm:text-3xl'
   };
 
   const logoSize = sizes[size] || sizes.md;
   const textSize = textSizes[size] || textSizes.md;
 
   return (
-    <div className={`flex items-center space-x-3 ${className}`}>
+    <div className={`flex items-center space-x-2 sm:space-x-3 ${className}`}>
       <img 
         src="/logo.svg" 
         alt="Transport DanGE Logo" 
-        className={`${logoSize} object-contain`}
+        className={`${logoSize} object-contain flex-shrink-0`}
       />
       {showText && (
         <div className="flex flex-col">
           <h1 className={`${textSize} font-bold text-primary leading-tight`}>
-            Transport DanGE
+            <span className="hidden xs:inline">Transport </span>DanGE
           </h1>
           <span className="text-xs text-gray-500 hidden sm:block">
             Taxi Dunois
