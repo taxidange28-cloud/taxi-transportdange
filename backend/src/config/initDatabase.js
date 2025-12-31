@@ -41,11 +41,13 @@ async function initDatabase() {
     const chauffeurIds = [];
     for (const chauffeur of chauffeurs) {
       const result = await pool.query(
-        'INSERT INTO chauffeurs (username, password, nom) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password RETURNING id',
+        'INSERT INTO chauffeurs (username, password, nom) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, nom = EXCLUDED.nom RETURNING id',
         [chauffeur.username, hashedPassword, chauffeur.nom]
       );
-      chauffeurIds.push(result.rows[0].id);
-      console.log(`✅ Chauffeur créé: ${chauffeur.username} / ChangezMoi123!`);
+      if (result.rows && result.rows.length > 0) {
+        chauffeurIds.push(result.rows[0].id);
+        console.log(`✅ Chauffeur créé: ${chauffeur.username} / ChangezMoi123!`);
+      }
     }
     console.log('');
 
