@@ -9,12 +9,15 @@ class AuthController {
     try {
       const { username, password } = req.body;
 
-      // Chercher d'abord dans les utilisateurs (secrétaire)
+      // Chercher d'abord dans les utilisateurs (secrétaire et admin)
       let user = await Utilisateur.findByUsername(username);
-      let role = 'secretaire';
+      let role = null;
       let userId = null;
 
-      if (!user) {
+      if (user) {
+        // Utilisateur trouvé dans la table utilisateurs (secrétaire ou admin)
+        role = user.role;
+      } else {
         // Si pas trouvé, chercher dans les chauffeurs
         user = await Chauffeur.findByUsername(username);
         role = 'chauffeur';
@@ -59,7 +62,7 @@ class AuthController {
     try {
       let userData;
       
-      if (req.user.role === 'secretaire') {
+      if (req.user.role === 'secretaire' || req.user.role === 'admin') {
         userData = await Utilisateur.findById(req.user.userId);
       } else if (req.user.role === 'chauffeur') {
         userData = await Chauffeur.findById(req.user.userId);
