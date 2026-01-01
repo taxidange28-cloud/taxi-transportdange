@@ -1,19 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminLogin from './components/Admin/AdminLogin';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import UserManagement from './components/Admin/UserManagement';
-import AdminStats from './components/Admin/AdminStats';
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Auth
-import Login from './components/Auth/Login';
 // Auth
 import Login from './components/Auth/Login';
 import AdminLogin from './components/Admin/AdminLogin';  // ⬅️ NOUVEAU
