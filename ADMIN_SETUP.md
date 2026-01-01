@@ -12,14 +12,30 @@ Ce guide explique comment créer un compte administrateur pour accéder au panne
 
 ## Création du Compte Admin
 
-### 1. Exécuter le Script
+### Méthode 1: Avec un mot de passe personnalisé (Recommandé)
+
+```bash
+cd backend
+npm run create-admin -- VotreMotDePasseSecurise123!
+```
+
+### Méthode 2: Avec une variable d'environnement
+
+```bash
+cd backend
+ADMIN_PASSWORD=VotreMotDePasseSecurise123! npm run create-admin
+```
+
+### Méthode 3: Avec le mot de passe par défaut (Non recommandé en production)
 
 ```bash
 cd backend
 npm run create-admin
 ```
 
-### 2. Vérification
+⚠️ **Note:** Si vous n'indiquez pas de mot de passe, le mot de passe par défaut `admin77281670` sera utilisé. **Changez-le immédiatement après la première connexion!**
+
+### Vérification
 
 Le script affichera un message de confirmation si la création est réussie :
 
@@ -31,7 +47,7 @@ Le script affichera un message de confirmation si la création est réussie :
 📋 Informations du compte:
    ID: 1
    Username: admin
-   Password: admin77281670
+   Password: ********
    Rôle: admin
    Créé le: 2024-01-01 12:00:00
 
@@ -43,7 +59,7 @@ Le script affichera un message de confirmation si la création est réussie :
 | Champ | Valeur |
 |-------|--------|
 | **Username** | `admin` |
-| **Password** | `admin77281670` |
+| **Password** | Celui que vous avez défini (ou `admin77281670` par défaut) |
 | **Rôle** | `admin` |
 
 ## Connexion
@@ -61,7 +77,7 @@ Si vous voyez ce message :
 ⚠️  Un compte administrateur existe déjà!
 ```
 
-Le compte admin a déjà été créé. Si vous avez oublié le mot de passe, vous devrez le réinitialiser manuellement dans la base de données.
+Le compte admin a déjà été créé. Si vous avez oublié le mot de passe, vous devrez le réinitialiser manuellement dans la base de données ou via l'interface admin.
 
 ### Erreur de connexion à la base de données
 
@@ -74,22 +90,30 @@ Le compte admin a déjà été créé. Si vous avez oublié le mot de passe, vou
 2. Vérifiez les variables d'environnement dans le fichier `.env`
 3. Assurez-vous que la base de données existe et est accessible
 
+### Mot de passe trop court
+
+```
+❌ Le mot de passe doit contenir au moins 8 caractères
+```
+
+Utilisez un mot de passe d'au moins 8 caractères.
+
 ## ⚠️ Sécurité
 
 ### Recommandations Importantes
 
-1. **Changez le mot de passe immédiatement** après la première connexion
-2. Utilisez un mot de passe fort contenant :
+1. **Utilisez un mot de passe fort** lors de la création :
    - Au moins 12 caractères
-   - Des lettres majuscules et minuscules
-   - Des chiffres
-   - Des caractères spéciaux
-3. Ne partagez jamais vos identifiants administrateur
-4. Activez la double authentification si disponible
+   - Lettres majuscules et minuscules
+   - Chiffres
+   - Caractères spéciaux
+2. Ne partagez jamais vos identifiants administrateur
+3. Changez le mot de passe régulièrement
+4. N'utilisez pas le mot de passe par défaut en production
 
 ### Pour Changer le Mot de Passe
 
-Une fois connecté en tant qu'administrateur, utilisez l'interface de gestion de compte pour changer votre mot de passe.
+Une fois connecté en tant qu'administrateur, utilisez l'interface de gestion de compte pour changer votre mot de passe via l'API `/api/admin/users/:id/password`.
 
 ## Support
 

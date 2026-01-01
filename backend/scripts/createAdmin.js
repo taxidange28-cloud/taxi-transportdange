@@ -5,6 +5,15 @@ async function createAdmin() {
   try {
     console.log('🔧 Création du compte administrateur...\n');
 
+    // Récupérer le mot de passe depuis les arguments ou l'environnement
+    const password = process.argv[2] || process.env.ADMIN_PASSWORD || 'admin77281670';
+    
+    if (!password || password.length < 8) {
+      console.error('❌ Le mot de passe doit contenir au moins 8 caractères');
+      await pool.end();
+      process.exit(1);
+    }
+
     // Vérifier si un admin existe déjà
     const existingAdmin = await pool.query(
       'SELECT * FROM utilisateurs WHERE username = $1',
@@ -16,11 +25,11 @@ async function createAdmin() {
       console.log('   Username: admin');
       console.log('   Créé le:', existingAdmin.rows[0].created_at);
       console.log('\n💡 Pour réinitialiser le mot de passe, supprimez d\'abord le compte existant.');
+      await pool.end();
       process.exit(0);
     }
 
     // Générer le hash du mot de passe
-    const password = 'admin77281670';
     console.log('🔐 Hashage du mot de passe...');
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log('✅ Mot de passe hashé avec succès\n');
@@ -42,13 +51,14 @@ async function createAdmin() {
     console.log('📋 Informations du compte:');
     console.log('   ID:', admin.id);
     console.log('   Username: admin');
-    console.log('   Password: admin77281670');
+    console.log('   Password: ********');
     console.log('   Rôle:', admin.role);
     console.log('   Créé le:', admin.created_at);
     console.log('');
     console.log('⚠️  IMPORTANT: Changez le mot de passe après la première connexion!');
     console.log('');
 
+    await pool.end();
     process.exit(0);
   } catch (error) {
     console.error('❌ Erreur lors de la création du compte administrateur:', error.message);
@@ -59,6 +69,7 @@ async function createAdmin() {
       console.error('   2. Les variables d\'environnement sont correctement configurées');
       console.error('   3. La base de données existe et est accessible');
     }
+    await pool.end();
     process.exit(1);
   }
 }

@@ -105,6 +105,9 @@ npm run build  # Production
 
 ## 👥 Comptes Utilisateurs
 
+**Administrateur:**
+- Pour créer un compte admin, voir: **[ADMIN_SETUP.md](ADMIN_SETUP.md)**
+
 **Secrétaire:**
 - Username: `Secretaire`
 - Password: `ChangezMoi123!`
