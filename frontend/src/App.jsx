@@ -126,16 +126,7 @@ function App() {
                 <AdminStats />
               </ProtectedRoute>
             }
-          />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+          />          
         </Routes>
       </BrowserRouter>
     </AuthProvider>
