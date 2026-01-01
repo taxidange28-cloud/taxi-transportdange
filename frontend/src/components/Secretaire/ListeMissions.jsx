@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getMissions, deleteMission, getChauffeurs } from '../../services/api';
+import api from '../../services/api';
 import Button from '../Common/Button';
 import Card from '../Common/Card';
-import { Edit, Trash2, Send, Filter } from 'lucide-react';
+import { useToast, ToastContainer } from '../Common/NotificationToast';
+import { Edit, Trash2, Send, Filter, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
 
@@ -10,6 +12,8 @@ const ListeMissions = () => {
   const [missions, setMissions] = useState([]);
   const [chauffeurs, setChauffeurs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const { toasts, showToast, removeToast } = useToast();
   const [filters, setFilters] = useState({
     statut: '',
     date_debut: format(new Date(), 'yyyy-MM-dd'),
@@ -43,9 +47,37 @@ const ListeMissions = () => {
     try {
       await deleteMission(id);
       setMissions(missions.filter(m => m.id !== id));
+      showToast('Mission supprimée avec succès', 'success');
     } catch (error) {
       console.error('Erreur suppression mission:', error);
-      alert('Erreur lors de la suppression');
+      showToast('Erreur lors de la suppression de la mission', 'error');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      const response = await api.get('/export/excel', {
+        params: filters,
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `missions-${format(new Date(), 'yyyy-MM-dd-HHmm')}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      showToast('Export Excel réussi !', 'success');
+    } catch (error) {
+      console.error('Erreur export:', error);
+      showToast('Erreur lors de l\'export Excel. Vérifiez que le serveur supporte cette fonctionnalité.', 'error', 7000);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -75,8 +107,18 @@ const ListeMissions = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Liste des missions</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Liste des missions</h2>
+        <Button
+          onClick={handleExportExcel}
+          disabled={exporting || missions.length === 0}
+          size="sm"
+          className="flex items-center space-x-2 w-full sm:w-auto"
+        >
+          <Download className="w-4 h-4" />
+          <span className="hidden sm:inline">{exporting ? 'Export...' : '📥 Exporter Excel'}</span>
+          <span className="sm:hidden">{exporting ? 'Export...' : '📥 Excel'}</span>
+        </Button>
       </div>
 
       {/* Filtres */}
@@ -177,6 +219,9 @@ const ListeMissions = () => {
           })}
         </div>
       )}
+      
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

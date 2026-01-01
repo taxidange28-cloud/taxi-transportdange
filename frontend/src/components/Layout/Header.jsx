@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut, User } from 'lucide-react';
 import Button from '../Common/Button';
+import Logo from '../Common/Logo';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -17,10 +18,7 @@ const Header = () => {
     <header className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <span className="text-2xl mr-2">🚕</span>
-            <h1 className="text-xl font-bold text-primary">Transport DanGE</h1>
-          </div>
+          <Logo size="sm" showText={true} />
           
           {user && (
             <div className="flex items-center space-x-4">

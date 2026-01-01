@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getMe } from '../services/api';
+import socketService from '../services/socket';
 
 const AuthContext = createContext(null);
 
@@ -10,6 +11,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Connect socket when user is authenticated
+  useEffect(() => {
+    if (user && !socketService.isConnected()) {
+      socketService.connect();
+    }
+    
+    return () => {
+      // Cleanup: disconnect socket when component unmounts
+      if (socketService.isConnected()) {
+        socketService.disconnect();
+      }
+    };
+  }, [user]);
 
   const checkAuth = async () => {
     const token = localStorage.getItem('token');
@@ -30,12 +45,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+    
+    // Connect to socket when user logs in
+    socketService.connect();
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    
+    // Disconnect socket when user logs out
+    socketService.disconnect();
   };
 
   return (
