@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "init-db": "node database/init.js"
+    "init-db": "node database/init.js",
+    "create-admin": "node scripts/createAdmin.js"
   },
   "keywords": ["taxi", "dispatch", "transport", "dange"],
   "author": "Transport DanGE",
