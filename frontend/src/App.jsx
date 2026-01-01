@@ -97,7 +97,7 @@ const DashboardLayout = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -137,7 +137,7 @@ function App() {
             }
           />
         </Routes>
-      </Router>
+      </BrowserRouter>
     </AuthProvider>
   );
 }
