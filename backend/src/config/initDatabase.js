@@ -29,6 +29,16 @@ async function initDatabase() {
     );
     console.log('✅ Secrétaire créée: Secretaire / ChangezMoi123!\n');
 
+    // Insérer l'admin
+    console.log('👨‍💼 Insertion de l\'admin...');
+    const adminPassword = 'Admin2026Secure!';
+    const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+    await pool.query(
+      'INSERT INTO utilisateurs (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING',
+      ['admin', hashedAdminPassword, 'admin']
+    );
+    console.log('✅ Admin créé: admin / Admin2026Secure!\n');
+
     // Insérer les chauffeurs
     console.log('👥 Insertion des chauffeurs...');
     const chauffeurs = [
@@ -74,6 +84,7 @@ async function initDatabase() {
     console.log('═══════════════════════════════════════════════');
     console.log('');
     console.log('📋 Comptes créés:');
+    console.log('  Admin: admin / Admin2026Secure!');
     console.log('  Secrétaire: Secretaire / ChangezMoi123!');
     console.log('  Chauffeurs: patron, franck, laurence, autre / ChangezMoi123!');
     console.log('');
