@@ -4,7 +4,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Auth
 import Login from './components/Auth/Login';
-
+// Auth
+import Login from './components/Auth/Login';
+import AdminLogin from './components/Admin/AdminLogin';  // ⬅️ NOUVEAU
+import AdminDashboard from './components/Admin/AdminDashboard';
+import UserManagement from './components/Admin/UserManagement';
+import AdminStats from './components/Admin/AdminStats';
 // Layout
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
@@ -97,7 +102,33 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
           
+          {/* Routes Admin */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/stats"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <AdminStats />
+              </ProtectedRoute>
+            }
+          />
           {/* Routes Secrétaire */}
           <Route
             path="/secretaire/dashboard"
