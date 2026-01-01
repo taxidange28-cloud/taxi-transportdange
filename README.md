@@ -6,8 +6,42 @@ Application complète de gestion de missions taxi pour **Transport DanGE** (Taxi
 
 Système complet comprenant:
 - 🖥️ **Backend API** (Node.js + PostgreSQL)
-- 💻 **Frontend Secrétaire** (React - Interface web PC)
-- 📱 **Frontend Chauffeur** (React PWA - Application mobile)
+- 🆕 **Frontend Unifié** (React + Vite + TailwindCSS) - **NOUVEAU**
+- 💻 **Frontend Secrétaire** (React - Interface web PC) - Legacy
+- 📱 **Frontend Chauffeur** (React PWA - Application mobile) - Legacy
+
+## 🆕 Nouveau Frontend Unifié
+
+Le nouveau frontend unifié combine les interfaces Secrétaire et Chauffeur dans une seule application moderne :
+
+### Technologies
+- **Vite** - Build tool ultra-rapide
+- **React 18** - Framework UI
+- **TailwindCSS v4** - Framework CSS moderne
+- **React Router v6** - Navigation
+- **Axios** - Client HTTP avec intercepteurs
+- **Lucide React** - Icônes modernes
+- **date-fns v4** - Manipulation de dates
+
+### Fonctionnalités
+- ✅ Authentification unifiée avec gestion JWT
+- ✅ Interface Secrétaire : Dashboard, Création missions, Liste missions, Statistiques
+- ✅ Interface Chauffeur : Dashboard, Mes missions, Détails mission, Actions
+- ✅ Routes protégées avec vérification de rôle
+- ✅ Design responsive et moderne
+- ✅ Composants réutilisables (Button, Input, Card)
+- ✅ Gestion d'erreurs complète
+- ✅ Build optimisé pour production
+
+### Démarrage rapide
+```bash
+cd frontend
+npm install
+npm run dev    # Développement
+npm run build  # Production
+```
+
+📖 **Documentation complète** : [frontend/README.md](frontend/README.md)
 
 ## 🎨 Identité Visuelle
 
@@ -105,9 +139,11 @@ Voir: **INSTALLATION-RAPIDE.md**
 ```
 taxi-transportdange/
 ├── backend/                    # API Node.js
-├── frontend-secretaire/       # Interface web secrétaire
-├── frontend-chauffeur/        # PWA chauffeur
+├── frontend/                   # 🆕 Frontend unifié (Vite + TailwindCSS)
+├── frontend-secretaire/       # Interface web secrétaire (Legacy)
+├── frontend-chauffeur/        # PWA chauffeur (Legacy)
 ├── documentation/             # Documentation (9 guides)
+├── render.yaml                # Configuration déploiement Render
 └── scripts/                   # Scripts d'installation
 ```
 
