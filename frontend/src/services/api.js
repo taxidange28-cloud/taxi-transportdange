@@ -82,5 +82,14 @@ export const getChauffeurs = () =>
 
 export const getMissionsChauffeur = (chauffeurId, filters = {}) => 
   api.get(`/chauffeurs/${chauffeurId}/missions`, { params: filters });
+// Admin - Gestion des utilisateurs
+export const adminApi = {
+  getUsers: () => api.get('/admin/users'),
+  getUser: (id) => api.get(`/admin/users/${id}`),
+  createUser: (data) => api.post('/admin/users', data),
+  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  resetPassword: (id) => api.post(`/admin/users/${id}/reset-password`),
+};
 
 export default api;
