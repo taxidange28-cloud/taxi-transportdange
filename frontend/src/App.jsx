@@ -1,3 +1,13 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Login from './components/Login';
+import Register from './components/Register';
+import Dashboard from './components/Dashboard';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminLogin from './components/Admin/AdminLogin';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import UserManagement from './components/Admin/UserManagement';
+import AdminStats from './components/Admin/AdminStats';
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -99,11 +109,11 @@ const DashboardLayout = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-                    <Route path="/admin/login" element={<AdminLogin />} />
-          
+          <Route path="/admin/login" element={<AdminLogin />} />
+
           {/* Routes Admin */}
           <Route
             path="/admin/dashboard"
@@ -129,95 +139,17 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Routes Secrétaire */}
+          <Route path="/register" element={<Register />} />
           <Route
-            path="/secretaire/dashboard"
+            path="/dashboard"
             element={
-              <ProtectedRoute allowedRole="secretaire">
-                <DashboardLayout>
-                  <SecretaireDashboard />
-                </DashboardLayout>
+              <ProtectedRoute>
+                <Dashboard />
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/secretaire/missions/creer"
-            element={
-              <ProtectedRoute allowedRole="secretaire">
-                <DashboardLayout>
-                  <CreerMission />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secretaire/missions"
-            element={
-              <ProtectedRoute allowedRole="secretaire">
-                <DashboardLayout>
-                  <ListeMissions />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secretaire/statistiques"
-            element={
-              <ProtectedRoute allowedRole="secretaire">
-                <DashboardLayout>
-                  <Statistiques />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Routes Chauffeur */}
-          <Route
-            path="/chauffeur/dashboard"
-            element={
-              <ProtectedRoute allowedRole="chauffeur">
-                <DashboardLayout>
-                  <ChauffeurDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chauffeur/missions"
-            element={
-              <ProtectedRoute allowedRole="chauffeur">
-                <DashboardLayout>
-                  <MesMissions />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chauffeur/missions/:id"
-            element={
-              <ProtectedRoute allowedRole="chauffeur">
-                <DashboardLayout>
-                  <DetailMission />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chauffeur/historique"
-            element={
-              <ProtectedRoute allowedRole="chauffeur">
-                <DashboardLayout>
-                  <MesMissions />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Redirect par défaut */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </AuthProvider>
   );
 }
