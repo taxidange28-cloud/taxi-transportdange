@@ -88,24 +88,22 @@ const CreerMission = () => {
     setSuccess(false);
 
     try {
-      // Transformer les données pour correspondre à l'API backend
       const missionData = {
         date_mission: formData.dateHeure.split('T')[0],
         heure_prevue: formData.dateHeure.split('T')[1],
         client: formData.clientNom,
-        telephone: formData.clientTelephone,
         adresse_depart: formData.adresseDepart,
         adresse_arrivee: formData.adresseArrivee,
         type: formData.typeVehicule,
-        prix: formData.prixEstime || null,
         notes: formData.notes,
         chauffeur_id: formData.chauffeurId || null,
+        vehicule_id: null,
+        statut: 'brouillon'
       };
 
       await createMission(missionData);
       setSuccess(true);
       
-      // Réinitialiser le formulaire après 2 secondes
       setTimeout(() => {
         setFormData({
           clientNom: '',
