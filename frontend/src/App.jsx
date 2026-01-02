@@ -127,6 +127,80 @@ function App() {
                 <AdminStats />
               </ProtectedRoute>
             }
+          />
+
+          {/* Routes Secrétaire */}
+          <Route
+            path="/secretaire/dashboard"
+            element={
+              <ProtectedRoute allowedRole="secretaire">
+                <DashboardLayout>
+                  <SecretaireDashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/secretaire/creer-mission"
+            element={
+              <ProtectedRoute allowedRole="secretaire">
+                <DashboardLayout>
+                  <CreerMission />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/secretaire/missions"
+            element={
+              <ProtectedRoute allowedRole="secretaire">
+                <DashboardLayout>
+                  <ListeMissions />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/secretaire/stats"
+            element={
+              <ProtectedRoute allowedRole="secretaire">
+                <DashboardLayout>
+                  <Statistiques />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Routes Chauffeur */}
+          <Route
+            path="/chauffeur/dashboard"
+            element={
+              <ProtectedRoute allowedRole="chauffeur">
+                <DashboardLayout>
+                  <ChauffeurDashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chauffeur/missions"
+            element={
+              <ProtectedRoute allowedRole="chauffeur">
+                <DashboardLayout>
+                  <MesMissions />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chauffeur/mission/:id"
+            element={
+              <ProtectedRoute allowedRole="chauffeur">
+                <DashboardLayout>
+                  <DetailMission />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />          
         </Routes>
       </BrowserRouter>
