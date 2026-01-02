@@ -3,7 +3,7 @@ require('dotenv').config();
 
 let firebaseApp = null;
 
-const initializeFirebase = () => {
+const initializeFirebase = () =>  {
   try {
     // Vérifier si Firebase est déjà initialisé
     if (firebaseApp) {
@@ -33,8 +33,7 @@ const initializeFirebase = () => {
   } catch (error) {
     console.error('❌ Erreur initialisation Firebase:', error.message);
     return null;
-  }
-};
+  };
 
 const getMessaging = () => {
   if (!firebaseApp) {
@@ -45,5 +44,5 @@ const getMessaging = () => {
 
 module.exports = {
   initializeFirebase,
-  getMessaging,
+  getMessaging, }
 };
