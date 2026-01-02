@@ -25,8 +25,17 @@ const server = http.createServer(app);
 
 // Configuration CORS
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3001', 'http://localhost:3002'],
+  origin: process.env.CORS_ORIGINS?.split(',') || [
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://transport-dange-frontend.onrender.com',
+    'https://taxi-transportdange.onrender.com',
+  ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders:  ['Content-Type', 'Authorization'],
 };
 
 // Initialiser Socket.io avec CORS
