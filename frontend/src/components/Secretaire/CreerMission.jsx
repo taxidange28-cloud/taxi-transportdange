@@ -92,14 +92,19 @@ const CreerMission = () => {
         date_mission: formData.dateHeure.split('T')[0],
         heure_prevue: formData.dateHeure.split('T')[1],
         client: formData.clientNom,
+        client_telephone: formData.clientTelephone,
         adresse_depart: formData.adresseDepart,
         adresse_arrivee: formData.adresseArrivee,
-        type: formData.typeVehicule,
+        nombre_passagers: parseInt(formData.nombrePassagers),
+        prix_estime: parseFloat(formData.prixEstime) || null,
+        type: 'Privé',
         notes: formData.notes,
         chauffeur_id: formData.chauffeurId || null,
         vehicule_id: null,
         statut: 'brouillon'
       };
+
+      console.log('📤 Données envoyées au backend:', missionData);
 
       await createMission(missionData);
       setSuccess(true);
@@ -119,9 +124,17 @@ const CreerMission = () => {
         });
         setSuccess(false);
       }, 2000);
+
     } catch (error) {
-      console.error('Erreur création mission:', error);
-      setErrors({ submit: error.response?.data?.error || 'Erreur lors de la création' });
+      console.error('❌ Erreur complète:', error);
+      console.error('📥 Réponse backend:', error.response);
+      
+      const errorMessage = error.response?.data?.error 
+        || error.response?.data?.message 
+        || error.message 
+        || 'Erreur lors de la création';
+        
+      setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
     }
