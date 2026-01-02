@@ -1,22 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Plus, List, Car, History, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Plus, List, Car, BarChart3 } from 'lucide-react';
 
 const Sidebar = () => {
   const { user } = useAuth();
 
   const secretaireLinks = [
     { to: '/secretaire/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/secretaire/missions/creer', icon: Plus, label: 'Créer Mission' },
+    { to: '/secretaire/creer-mission', icon: Plus, label: 'Créer Mission' },
     { to: '/secretaire/missions', icon: List, label: 'Liste Missions' },
-    { to: '/secretaire/statistiques', icon: BarChart3, label: 'Statistiques' },
+    { to: '/secretaire/stats', icon: BarChart3, label: 'Statistiques' },
   ];
 
   const chauffeurLinks = [
     { to: '/chauffeur/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/chauffeur/missions', icon: Car, label: 'Mes Missions' },
-    { to: '/chauffeur/historique', icon: History, label: 'Historique' },
   ];
 
   const links = user?.role === 'secretaire' ? secretaireLinks : chauffeurLinks;
