@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://taxi-transportdange.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://transport-dange-backend.onrender.com/api';
 
 // Créer une instance axios
 const api = axios.create({
