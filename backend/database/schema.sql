@@ -46,6 +46,9 @@ CREATE TABLE missions (
     chauffeur_id INTEGER REFERENCES chauffeurs(id),
     vehicule_id INTEGER REFERENCES vehicules(id),
     notes TEXT,
+    client_telephone VARCHAR(20),
+    nombre_passagers INTEGER DEFAULT 1,
+    prix_estime DECIMAL(10,2),
     statut VARCHAR(20) NOT NULL DEFAULT 'brouillon', -- brouillon, envoyee, confirmee, pec, terminee
     heure_pec TIMESTAMP,
     heure_depose TIMESTAMP,

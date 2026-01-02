@@ -7,9 +7,12 @@ class Mission {
       date_mission,
       heure_prevue,
       client,
+      client_telephone,
       type,
       adresse_depart,
       adresse_arrivee,
+      nombre_passagers,
+      prix_estime,
       chauffeur_id,
       vehicule_id,
       notes,
@@ -18,11 +21,13 @@ class Mission {
 
     const result = await query(
       `INSERT INTO missions 
-       (date_mission, heure_prevue, client, type, adresse_depart, adresse_arrivee, 
+       (date_mission, heure_prevue, client, client_telephone, type, 
+        adresse_depart, adresse_arrivee, nombre_passagers, prix_estime,
         chauffeur_id, vehicule_id, notes, statut)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
-      [date_mission, heure_prevue, client, type, adresse_depart, adresse_arrivee,
+      [date_mission, heure_prevue, client, client_telephone, type,
+       adresse_depart, adresse_arrivee, nombre_passagers, prix_estime,
        chauffeur_id, vehicule_id, notes, statut]
     );
     return result.rows[0];
