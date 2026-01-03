@@ -14,9 +14,9 @@ const CreerMission = () => {
     clientNom: '',
     clientTelephone: '',
     adresseDepart: '',
-    adresseArrivee:  '',
-    dateHeure: format(new Date(), "yyyy-MM-dd'T'HH: mm"),
-    nombrePassagers:  1,
+    adresseArrivee: '',
+    dateHeure: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    nombrePassagers: 1,
     prixEstime: '',
     typeVehicule: 'Berline',
     notes: '',
@@ -63,15 +63,15 @@ const CreerMission = () => {
     if (!formData.adresseArrivee.trim()) {
       newErrors.adresseArrivee = 'L\'adresse d\'arrivée est requise';
     }
-    if (! formData.dateHeure) {
+    if (!formData.dateHeure) {
       newErrors.dateHeure = 'La date et l\'heure sont requises';
     }
-    if (formData. nombrePassagers < 1) {
+    if (formData.nombrePassagers < 1) {
       newErrors.nombrePassagers = 'Le nombre de passagers doit être au moins 1';
     }
 
     setErrors(newErrors);
-    return Object. keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -86,19 +86,19 @@ const CreerMission = () => {
 
     try {
       const missionData = {
-  date_mission: formData.dateHeure. split('T')[0],
-  heure_prevue: formData.dateHeure.split('T')[1],
-  client: formData.clientNom,
-  client_telephone: formData.clientTelephone,
-  adresse_depart: formData.adresseDepart,
-  adresse_arrivee: formData.adresseArrivee,
-  nombre_passagers: parseInt(formData.nombrePassagers),
-  prix_estime: parseFloat(formData.prixEstime) || null,
-  type: 'Privé',
-  notes: formData.notes,
-  chauffeur_id:  formData.chauffeurId || null,
-  statut: 'brouillon'
-};
+        date_mission: formData.dateHeure.split('T')[0],
+        heure_prevue: formData.dateHeure.split('T')[1],
+        client: formData.clientNom,
+        client_telephone: formData.clientTelephone,
+        adresse_depart: formData.adresseDepart,
+        adresse_arrivee: formData.adresseArrivee,
+        nombre_passagers: parseInt(formData.nombrePassagers),
+        prix_estime: parseFloat(formData.prixEstime) || null,
+        type: 'Privé',
+        notes: formData.notes,
+        chauffeur_id: formData.chauffeurId || null,
+        statut: 'brouillon'
+      };
 
       console.log('📤 Données envoyées au backend:', missionData);
 
@@ -110,9 +110,9 @@ const CreerMission = () => {
           clientNom: '',
           clientTelephone: '',
           adresseDepart: '',
-          adresseArrivee:  '',
-          dateHeure: format(new Date(), "yyyy-MM-dd'T'HH: mm"),
-          nombrePassagers:  1,
+          adresseArrivee: '',
+          dateHeure: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+          nombrePassagers: 1,
           prixEstime: '',
           typeVehicule: 'Berline',
           notes: '',
@@ -123,9 +123,9 @@ const CreerMission = () => {
 
     } catch (error) {
       console.error('❌ Erreur complète:', error);
-      console.error('📥 Réponse backend:', error. response);
+      console.error('📥 Réponse backend:', error.response);
       
-      const errorMessage = error.response?.data?. error 
+      const errorMessage = error.response?.data?.error 
         || error.response?.data?.message 
         || error.message 
         || 'Erreur lors de la création';
@@ -160,7 +160,7 @@ const CreerMission = () => {
             <Input
               label="Nom du client"
               name="clientNom"
-              value={formData. clientNom}
+              value={formData.clientNom}
               onChange={handleChange}
               error={errors.clientNom}
               required
@@ -187,13 +187,13 @@ const CreerMission = () => {
           <Input
             label="Adresse d'arrivée"
             name="adresseArrivee"
-            value={formData. adresseArrivee}
+            value={formData.adresseArrivee}
             onChange={handleChange}
             error={errors.adresseArrivee}
             required
           />
 
-          <div className="grid grid-cols-1 md: grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input
               label="Date et heure"
               name="dateHeure"
@@ -232,7 +232,7 @@ const CreerMission = () => {
                 name="typeVehicule"
                 value={formData.typeVehicule}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus: ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 required
               >
                 <option value="Berline">Berline</option>
@@ -253,7 +253,7 @@ const CreerMission = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="">-- Non assigné --</option>
-                {chauffeurs. map((chauffeur) => (
+                {chauffeurs.map((chauffeur) => (
                   <option key={chauffeur.id} value={chauffeur.id}>
                     {chauffeur.nom}
                   </option>
@@ -271,7 +271,7 @@ const CreerMission = () => {
               value={formData.notes}
               onChange={handleChange}
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus: outline-none focus:ring-2 focus:ring-primary focus: border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Informations complémentaires..."
             />
           </div>
