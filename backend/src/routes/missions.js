@@ -5,7 +5,9 @@ const { verifyToken, requireSecretaire, requireChauffeur } = require('../middlew
 const { validateMission, validateMissionUpdate, validateCommentaire } = require('../middleware/validation');
 const { runMigration } = require('../../migrate');
 
-// Migration endpoint
+// Migration endpoint - REMOVE AFTER RUNNING MIGRATION IN PRODUCTION
+// This endpoint is intentionally unauthenticated for one-time migration convenience
+// TODO: Remove this endpoint after migration is complete
 router.get('/migrate', async (req, res) => {
   try {
     const result = await runMigration();
