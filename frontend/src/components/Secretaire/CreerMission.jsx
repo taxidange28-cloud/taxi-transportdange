@@ -57,9 +57,6 @@ const CreerMission = () => {
     if (!formData.clientNom.trim()) {
       newErrors.clientNom = 'Le nom du client est requis';
     }
-    if (!formData.clientTelephone.trim()) {
-      newErrors.clientTelephone = 'Le téléphone du client est requis';
-    }
     if (!formData.adresseDepart.trim()) {
       newErrors.adresseDepart = 'L\'adresse de départ est requise';
     }
@@ -176,7 +173,7 @@ const CreerMission = () => {
               value={formData.clientTelephone}
               onChange={handleChange}
               error={errors.clientTelephone}
-              required
+      
             />
           </div>
 
