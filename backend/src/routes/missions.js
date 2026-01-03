@@ -3,6 +3,19 @@ const router = express.Router();
 const MissionController = require('../controllers/missionController');
 const { verifyToken, requireSecretaire, requireChauffeur } = require('../middleware/auth');
 const { validateMission, validateMissionUpdate, validateCommentaire } = require('../middleware/validation');
+const { runMigration } = require('../../migrate');
+
+// Migration endpoint - REMOVE AFTER RUNNING MIGRATION IN PRODUCTION
+// This endpoint is intentionally unauthenticated for one-time migration convenience
+// TODO: Remove this endpoint after migration is complete
+router.get('/migrate', async (req, res) => {
+  try {
+    const result = await runMigration();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Routes secrétaire
 router.post('/', verifyToken, requireSecretaire, validateMission, MissionController.creer);
