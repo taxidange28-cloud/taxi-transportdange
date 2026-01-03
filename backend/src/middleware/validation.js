@@ -16,7 +16,7 @@ const validate = (req, res, next) => {
 // Validations pour les missions
 const validateMission = [
   body('date_mission').isDate().withMessage('Date de mission invalide'),
-  body('heure_prevue').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Heure prévue invalide (format HH: MM)'),
+  body('heure_prevue').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Heure prévue invalide (format HH:MM)'),
   body('client').trim().notEmpty().withMessage('Client requis'),
   body('client_telephone')
     .optional({ values: 'falsy' })
