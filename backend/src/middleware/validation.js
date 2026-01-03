@@ -6,17 +6,17 @@ const validate = (req, res, next) => {
   if (!errors.isEmpty()) {
     console.error('❌ Validation failed for:', req.method, req.url);
     console.error('❌ Request body:', JSON.stringify(req.body, null, 2));
-    console.error('❌ Validation errors:', JSON.stringify(errors. array(), null, 2));
+    console.error('❌ Validation errors:', JSON.stringify(errors.array(), null, 2));
     return res.status(400).json({ errors: errors.array() });
   }
-  console.log('✅ Validation passed for:', req.method, req. url);
+  console.log('✅ Validation passed for:', req.method, req.url);
   next();
 };
 
 // Validations pour les missions
 const validateMission = [
   body('date_mission').isDate().withMessage('Date de mission invalide'),
-  body('heure_prevue').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Heure prévue invalide (format HH:MM)'),
+  body('heure_prevue').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Heure prévue invalide (format HH: MM)'),
   body('client').trim().notEmpty().withMessage('Client requis'),
   body('client_telephone')
     .optional({ values: 'falsy' })
@@ -42,8 +42,15 @@ const validateMission = [
       return !isNaN(num) && num >= 0;
     })
     .withMessage('Prix estimé invalide (doit être >= 0)'),
-  body('chauffeur_id').optional().isInt().withMessage('ID chauffeur invalide'),
-  body('vehicule_id').optional().isInt().withMessage('ID véhicule invalide'),
+  body('chauffeur_id')
+    .optional({ values: 'falsy' })
+    .custom(value => {
+      if (value === '' || value === null || value === undefined) return true;
+      const num = parseInt(value, 10);
+      return !isNaN(num) && num > 0;
+    })
+    .withMessage('ID chauffeur invalide'),
+  // vehicule_id SUPPRIMÉ ✅
   body('notes').optional().trim(),
   validate
 ];
@@ -77,8 +84,15 @@ const validateMissionUpdate = [
       return !isNaN(num) && num >= 0;
     })
     .withMessage('Prix estimé invalide (doit être >= 0)'),
-  body('chauffeur_id').optional().isInt().withMessage('ID chauffeur invalide'),
-  body('vehicule_id').optional().isInt().withMessage('ID véhicule invalide'),
+  body('chauffeur_id')
+    .optional({ values: 'falsy' })
+    .custom(value => {
+      if (value === '' || value === null || value === undefined) return true;
+      const num = parseInt(value, 10);
+      return !isNaN(num) && num > 0;
+    })
+    .withMessage('ID chauffeur invalide'),
+  // vehicule_id SUPPRIMÉ ✅
   body('notes').optional().trim(),
   validate
 ];
