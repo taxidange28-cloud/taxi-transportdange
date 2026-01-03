@@ -86,20 +86,19 @@ const CreerMission = () => {
 
     try {
       const missionData = {
-        date_mission: formData.dateHeure.split('T')[0],
-        heure_prevue: formData.dateHeure.split('T')[1],
-        client:  formData.clientNom,
-        client_telephone: formData. clientTelephone,
-        adresse_depart: formData. adresseDepart,
-        adresse_arrivee: formData.adresseArrivee,
-        nombre_passagers:  parseInt(formData.nombrePassagers),
-        prix_estime:  parseFloat(formData.prixEstime) || null,
-        type: 'Privé',
-        notes: formData.notes,
-        chauffeur_id: formData.chauffeurId || null,
-        vehicule_id: null,
-        statut: 'brouillon'
-      };
+  date_mission: formData.dateHeure. split('T')[0],
+  heure_prevue: formData.dateHeure.split('T')[1],
+  client: formData.clientNom,
+  client_telephone: formData.clientTelephone,
+  adresse_depart: formData.adresseDepart,
+  adresse_arrivee: formData.adresseArrivee,
+  nombre_passagers: parseInt(formData.nombrePassagers),
+  prix_estime: parseFloat(formData.prixEstime) || null,
+  type: 'Privé',
+  notes: formData.notes,
+  chauffeur_id:  formData.chauffeurId || null,
+  statut: 'brouillon'
+};
 
       console.log('📤 Données envoyées au backend:', missionData);
 
