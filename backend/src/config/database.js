@@ -43,10 +43,15 @@ const query = async (text, params) => {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('Requête exécutée', { text, duration, rows: res.rowCount });
+    console.log('🗄️ Query executed', { text: text.substring(0, 50) + '...', duration, rows: res.rowCount });
     return res;
   } catch (error) {
-    console.error('Erreur de requête:', error);
+    console.error('🗄️ Database query error:', {
+      text: text.substring(0, 100),
+      error: error.message,
+      code: error.code,
+      detail: error.detail
+    });
     throw error;
   }
 };

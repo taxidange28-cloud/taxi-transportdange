@@ -3,34 +3,63 @@ const { query } = require('../config/database');
 class Mission {
   // Créer une mission
   static async create(missionData) {
+    console.log('📝 Mission.create called with:', JSON.stringify(missionData, null, 2));
+    
     const {
       date_mission,
       heure_prevue,
       client,
-      client_telephone,
+      client_telephone = null,
       type,
       adresse_depart,
       adresse_arrivee,
-      nombre_passagers,
-      prix_estime,
-      chauffeur_id,
-      vehicule_id,
-      notes,
+      nombre_passagers = 1,
+      prix_estime = null,
+      chauffeur_id = null,
+      vehicule_id = null,
+      notes = '',
       statut = 'brouillon'
     } = missionData;
 
-    const result = await query(
-      `INSERT INTO missions 
-       (date_mission, heure_prevue, client, client_telephone, type, 
-        adresse_depart, adresse_arrivee, nombre_passagers, prix_estime,
-        chauffeur_id, vehicule_id, notes, statut)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-       RETURNING *`,
-      [date_mission, heure_prevue, client, client_telephone, type,
-       adresse_depart, adresse_arrivee, nombre_passagers, prix_estime,
-       chauffeur_id, vehicule_id, notes, statut]
-    );
-    return result.rows[0];
+    // Convert prix_estime to proper format with validation
+    let prixEstimeValue = null;
+    if (prix_estime != null) {
+      const parsed = parseFloat(prix_estime);
+      prixEstimeValue = !isNaN(parsed) ? parsed : null;
+    }
+    
+    let nombrePassagersValue = 1;
+    if (nombre_passagers != null) {
+      const parsed = parseInt(nombre_passagers);
+      nombrePassagersValue = !isNaN(parsed) ? parsed : 1;
+    }
+    
+    console.log('📝 Processed values:');
+    console.log('  - prix_estime:', prixEstimeValue, typeof prixEstimeValue);
+    console.log('  - nombre_passagers:', nombrePassagersValue, typeof nombrePassagersValue);
+    console.log('  - client_telephone:', client_telephone);
+
+    try {
+      const result = await query(
+        `INSERT INTO missions 
+         (date_mission, heure_prevue, client, client_telephone, type, 
+          adresse_depart, adresse_arrivee, nombre_passagers, prix_estime,
+          chauffeur_id, vehicule_id, notes, statut)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         RETURNING *`,
+        [date_mission, heure_prevue, client, client_telephone, type,
+         adresse_depart, adresse_arrivee, nombrePassagersValue, prixEstimeValue,
+         chauffeur_id, vehicule_id, notes, statut]
+      );
+      
+      console.log('✅ Mission inserted successfully:', result.rows[0].id);
+      return result.rows[0];
+    } catch (error) {
+      console.error('❌ Database INSERT error:', error.message);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error detail:', error.detail);
+      throw error;
+    }
   }
 
   // Récupérer toutes les missions avec filtres
