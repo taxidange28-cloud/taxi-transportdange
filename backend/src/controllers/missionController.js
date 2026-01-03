@@ -5,8 +5,28 @@ class MissionController {
   // Créer une mission (secrétaire)
   static async creer(req, res) {
     try {
+      console.log('📥 CREATE MISSION - Request body:', JSON.stringify(req.body, null, 2));
+      console.log('📥 CREATE MISSION - User:', req.user);
+      
       const missionData = req.body;
+      
+      // Validate required fields
+      const requiredFields = ['date_mission', 'heure_prevue', 'client', 'adresse_depart', 'adresse_arrivee'];
+      const missingFields = requiredFields.filter(field => !missionData[field]);
+      
+      if (missingFields.length > 0) {
+        console.log('❌ Missing fields:', missingFields);
+        return res.status(400).json({ 
+          error: 'Champs requis manquants', 
+          missingFields 
+        });
+      }
+      
+      console.log('✅ Validation passed, creating mission...');
+      
       const mission = await Mission.create(missionData);
+      
+      console.log('✅ Mission created successfully:', mission.id);
 
       // Si la mission est envoyée immédiatement, envoyer notification
       if (missionData.statut === 'envoyee') {
@@ -21,8 +41,16 @@ class MissionController {
 
       res.status(201).json(mission);
     } catch (error) {
-      console.error('Erreur création mission:', error);
-      res.status(500).json({ error: 'Erreur serveur' });
+      console.error('❌ CREATE MISSION ERROR:');
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Error details:', error);
+      
+      res.status(500).json({ 
+        error: 'Erreur lors de la création de la mission',
+        details: error.message,
+        hint: error.hint || null
+      });
     }
   }
 
