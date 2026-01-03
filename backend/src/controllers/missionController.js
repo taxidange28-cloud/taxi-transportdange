@@ -11,7 +11,7 @@ class MissionController {
       const missionData = req.body;
       
       // Validate required fields
-      const requiredFields = ['date_mission', 'heure_prevue', 'client', 'adresse_depart', 'adresse_arrivee'];
+      const requiredFields = ['date_mission', 'heure_prevue', 'client', 'type', 'adresse_depart', 'adresse_arrivee'];
       const missingFields = requiredFields.filter(field => !missionData[field]);
       
       if (missingFields.length > 0) {

@@ -21,9 +21,18 @@ class Mission {
       statut = 'brouillon'
     } = missionData;
 
-    // Convert prix_estime to proper format
-    const prixEstimeValue = prix_estime ? parseFloat(prix_estime) : null;
-    const nombrePassagersValue = nombre_passagers ? parseInt(nombre_passagers) : 1;
+    // Convert prix_estime to proper format with validation
+    let prixEstimeValue = null;
+    if (prix_estime != null) {
+      const parsed = parseFloat(prix_estime);
+      prixEstimeValue = !isNaN(parsed) ? parsed : null;
+    }
+    
+    let nombrePassagersValue = 1;
+    if (nombre_passagers != null) {
+      const parsed = parseInt(nombre_passagers);
+      nombrePassagersValue = !isNaN(parsed) ? parsed : 1;
+    }
     
     console.log('📝 Processed values:');
     console.log('  - prix_estime:', prixEstimeValue, typeof prixEstimeValue);
