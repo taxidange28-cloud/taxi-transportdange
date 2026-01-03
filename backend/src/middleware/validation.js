@@ -4,8 +4,12 @@ const { body, param, query, validationResult } = require('express-validator');
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.error('❌ Validation failed for:', req.method, req.url);
+    console.error('❌ Request body:', JSON.stringify(req.body, null, 2));
+    console.error('❌ Validation errors:', JSON.stringify(errors.array(), null, 2));
     return res.status(400).json({ errors: errors.array() });
   }
+  console.log('✅ Validation passed for:', req.method, req.url);
   next();
 };
 
@@ -14,9 +18,12 @@ const validateMission = [
   body('date_mission').isDate().withMessage('Date de mission invalide'),
   body('heure_prevue').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Heure prévue invalide (format HH:MM)'),
   body('client').trim().notEmpty().withMessage('Client requis'),
+  body('client_telephone').optional().trim().isLength({ min: 0, max: 20 }).withMessage('Téléphone client invalide (max 20 caractères)'),
   body('type').isIn(['CPAM', 'Privé']).withMessage('Type doit être CPAM ou Privé'),
   body('adresse_depart').trim().notEmpty().withMessage('Adresse de départ requise'),
   body('adresse_arrivee').trim().notEmpty().withMessage('Adresse d\'arrivée requise'),
+  body('nombre_passagers').optional().isInt({ min: 1, max: 50 }).withMessage('Nombre de passagers invalide (1-50)'),
+  body('prix_estime').optional().isFloat({ min: 0 }).withMessage('Prix estimé invalide (doit être >= 0)'),
   body('chauffeur_id').optional().isInt().withMessage('ID chauffeur invalide'),
   body('vehicule_id').optional().isInt().withMessage('ID véhicule invalide'),
   body('notes').optional().trim(),
@@ -28,9 +35,12 @@ const validateMissionUpdate = [
   body('date_mission').optional().isDate().withMessage('Date de mission invalide'),
   body('heure_prevue').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Heure prévue invalide'),
   body('client').optional().trim().notEmpty().withMessage('Client requis'),
+  body('client_telephone').optional().trim().isLength({ min: 0, max: 20 }).withMessage('Téléphone client invalide (max 20 caractères)'),
   body('type').optional().isIn(['CPAM', 'Privé']).withMessage('Type doit être CPAM ou Privé'),
   body('adresse_depart').optional().trim().notEmpty().withMessage('Adresse de départ requise'),
   body('adresse_arrivee').optional().trim().notEmpty().withMessage('Adresse d\'arrivée requise'),
+  body('nombre_passagers').optional().isInt({ min: 1, max: 50 }).withMessage('Nombre de passagers invalide (1-50)'),
+  body('prix_estime').optional().isFloat({ min: 0 }).withMessage('Prix estimé invalide (doit être >= 0)'),
   body('chauffeur_id').optional().isInt().withMessage('ID chauffeur invalide'),
   body('vehicule_id').optional().isInt().withMessage('ID véhicule invalide'),
   body('notes').optional().trim(),
