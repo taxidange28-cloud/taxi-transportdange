@@ -10,9 +10,7 @@ import { fr } from 'date-fns/locale/fr';
 
 /**
  * Composant de liste des missions avec filtres et export Excel
- * Version hybride combinant :
- * - Corrections de bugs critiques (memory leaks, erreurs, accessibilité)
- * - Améliorations fonctionnelles (période 60j, champs additionnels)
+ * CORRECTION: Boucle infinie résolue en retirant showToast des dépendances
  */
 const ListeMissions = () => {
   const [missions, setMissions] = useState([]);
@@ -63,7 +61,8 @@ const ListeMissions = () => {
     return () => {
       isMounted = false;
     };
-  }, [filters, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]); // ✅ CORRECTION: Retrait de showToast pour éviter la boucle infinie
 
   // Fonction de suppression avec confirmation
   const handleDelete = async (id) => {
