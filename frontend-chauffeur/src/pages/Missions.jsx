@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -22,24 +22,8 @@ function Missions() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    if (!userData || userData.role !== 'chauffeur') {
-      navigate('/login');
-      return;
-    }
-
-    setUser(userData);
-    loadMissions(userData.id);
-    setupSocketListeners();
-    setupNotificationListener();
-
-    return () => {
-      removeSocketListeners();
-    };
-  }, [navigate]);
-
-  const loadMissions = async (chauffeurId) => {
+  // useCallback pour éviter de recréer la fonction à chaque render
+  const loadMissions = useCallback(async (chauffeurId) => {
     try {
       // Charger les missions pour aujourd'hui et les 7 prochains jours
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -54,46 +38,18 @@ function Missions() {
       setLoading(false);
     } catch (error) {
       console.error('Erreur chargement missions:', error);
-      showSnackbar('Erreur de chargement', 'error');
+      setSnackbar({ open: true, message: 'Erreur de chargement', severity: 'error' });
       setLoading(false);
     }
-  };
+  }, []); // Pas de dépendances car utilise seulement les paramètres
 
-  const setupSocketListeners = () => {
-    socketService.on('mission:nouvelle', handleMissionUpdate);
-    socketService.on('mission:envoyee', handleMissionUpdate);
-    socketService.on('missions:envoyees', handleMissionsUpdate);
-    socketService.on('mission:modifiee', handleMissionUpdate);
-    socketService.on('mission:supprimee', handleMissionDelete);
-  };
+  const showSnackbar = useCallback((message, severity = 'info') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
 
-  const removeSocketListeners = () => {
-    socketService.off('mission:nouvelle', handleMissionUpdate);
-    socketService.off('mission:envoyee', handleMissionUpdate);
-    socketService.off('missions:envoyees', handleMissionsUpdate);
-    socketService.off('mission:modifiee', handleMissionUpdate);
-    socketService.off('mission:supprimee', handleMissionDelete);
-  };
-
-  const setupNotificationListener = () => {
-    onMessageListener((payload) => {
-      console.log('Notification reçue:', payload);
-      
-      // Recharger les missions
-      if (user) {
-        loadMissions(user.id);
-      }
-
-      // Afficher un snackbar
-      const title = payload.notification?.title || 'Nouvelle notification';
-      const body = payload.notification?.body || '';
-      showSnackbar(`${title}: ${body}`, 'info');
-    });
-  };
-
-  const handleMissionUpdate = (mission) => {
+  const handleMissionUpdate = useCallback((mission) => {
     // Vérifier si c'est une mission pour ce chauffeur
-    if (mission.chauffeur_id !== user?.id) {
+    if (!user || mission.chauffeur_id !== user.id) {
       return;
     }
 
@@ -112,29 +68,81 @@ function Missions() {
     });
 
     showSnackbar('Mission mise à jour', 'info');
-  };
+  }, [user, showSnackbar]);
 
-  const handleMissionsUpdate = () => {
+  const handleMissionsUpdate = useCallback(() => {
     if (user) {
       loadMissions(user.id);
     }
     showSnackbar('Nouvelles missions reçues', 'success');
-  };
+  }, [user, loadMissions, showSnackbar]);
 
-  const handleMissionDelete = (data) => {
+  const handleMissionDelete = useCallback((data) => {
     setMissions((prev) => prev.filter((m) => m.id !== data.id));
     showSnackbar('Mission supprimée', 'warning');
-  };
+  }, [showSnackbar]);
 
-  const handleMissionUpdated = () => {
+  const setupSocketListeners = useCallback(() => {
+    socketService.on('mission:nouvelle', handleMissionUpdate);
+    socketService.on('mission:envoyee', handleMissionUpdate);
+    socketService.on('missions:envoyees', handleMissionsUpdate);
+    socketService.on('mission:modifiee', handleMissionUpdate);
+    socketService.on('mission:supprimee', handleMissionDelete);
+  }, [handleMissionUpdate, handleMissionsUpdate, handleMissionDelete]);
+
+  const removeSocketListeners = useCallback(() => {
+    socketService.off('mission:nouvelle', handleMissionUpdate);
+    socketService.off('mission:envoyee', handleMissionUpdate);
+    socketService.off('missions:envoyees', handleMissionsUpdate);
+    socketService.off('mission:modifiee', handleMissionUpdate);
+    socketService.off('mission:supprimee', handleMissionDelete);
+  }, [handleMissionUpdate, handleMissionsUpdate, handleMissionDelete]);
+
+  const setupNotificationListener = useCallback(() => {
+    onMessageListener((payload) => {
+      console.log('Notification reçue:', payload);
+      
+      // Recharger les missions
+      if (user) {
+        loadMissions(user.id);
+      }
+
+      // Afficher un snackbar
+      const title = payload.notification?.title || 'Nouvelle notification';
+      const body = payload.notification?.body || '';
+      showSnackbar(`${title}: ${body}`, 'info');
+    });
+  }, [user, loadMissions, showSnackbar]);
+
+  // useEffect pour initialiser l'utilisateur (une seule fois)
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData || userData.role !== 'chauffeur') {
+      navigate('/login');
+      return;
+    }
+
+    setUser(userData);
+  }, [navigate]);
+
+  // useEffect pour charger les missions quand user change
+  useEffect(() => {
+    if (user) {
+      loadMissions(user.id);
+      setupSocketListeners();
+      setupNotificationListener();
+
+      return () => {
+        removeSocketListeners();
+      };
+    }
+  }, [user, loadMissions, setupSocketListeners, setupNotificationListener, removeSocketListeners]);
+
+  const handleMissionUpdated = useCallback(() => {
     if (user) {
       loadMissions(user.id);
     }
-  };
-
-  const showSnackbar = (message, severity = 'info') => {
-    setSnackbar({ open: true, message, severity });
-  };
+  }, [user, loadMissions]);
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
