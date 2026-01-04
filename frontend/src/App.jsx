@@ -201,7 +201,9 @@ function App() {
                 </DashboardLayout>
               </ProtectedRoute>
             }
-          />          
+          />
+          {/* Route 404 - Catch all */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
