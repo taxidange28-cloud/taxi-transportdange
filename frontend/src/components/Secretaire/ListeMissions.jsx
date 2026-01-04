@@ -4,7 +4,7 @@ import api from '../../services/api';
 import Button from '../Common/Button';
 import Card from '../Common/Card';
 import { useToast, ToastContainer } from '../Common/NotificationToast';
-import { Edit, Trash2, Send, Filter, Download } from 'lucide-react';
+import { Trash2, Send, Filter, Download } from 'lucide-react';
 import { format, subDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
 
@@ -13,6 +13,8 @@ const ListeMissions = () => {
   const [chauffeurs, setChauffeurs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [sending, setSending] = useState({});
+  const [updatingChauffeur, setUpdatingChauffeur] = useState({});
   const { toasts, showToast, removeToast } = useToast();
   
   const [filters, setFilters] = useState({
@@ -21,14 +23,13 @@ const ListeMissions = () => {
     date_fin: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
   });
 
-  // ✅ CORRECTION : Retirer showToast des dépendances
   useEffect(() => {
     let isMounted = true;
     
     const loadData = async () => {
       try {
         setLoading(true);
-        const [missionsRes, chauffeursRes] = await Promise. all([
+        const [missionsRes, chauffeursRes] = await Promise.all([
           getMissions(filters),
           getChauffeurs(),
         ]);
@@ -53,7 +54,7 @@ const ListeMissions = () => {
     return () => {
       isMounted = false;
     };
-  }, [filters]); // ✅ Seulement filters
+  }, [filters]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
@@ -71,6 +72,59 @@ const ListeMissions = () => {
     }
   };
 
+  // Fonction pour envoyer la mission au chauffeur avec notification push
+  const handleSendToChauffeur = async (missionId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir envoyer cette mission au chauffeur ?')) {
+      return;
+    }
+
+    try {
+      setSending(prev => ({ ...prev, [missionId]: true }));
+      
+      // Appel API pour envoyer la mission (change statut + envoie notification)
+      await api.post(`/missions/${missionId}/envoyer`);
+      
+      // Mettre à jour l'état local
+      setMissions(prevMissions =>
+        prevMissions.map(m =>
+          m.id === missionId ? { ...m, statut: 'envoyee' } : m
+        )
+      );
+      
+      showToast('Mission envoyée au chauffeur avec notification !', 'success');
+    } catch (error) {
+      console.error('Erreur envoi mission:', error);
+      const errorMessage = error.response?.data?.message || 'Erreur lors de l\'envoi de la mission';
+      showToast(errorMessage, 'error');
+    } finally {
+      setSending(prev => ({ ...prev, [missionId]: false }));
+    }
+  };
+
+  // Fonction pour changer le chauffeur assigné
+  const handleChangeChauffeur = async (missionId, newChauffeurId) => {
+    try {
+      setUpdatingChauffeur(prev => ({ ...prev, [missionId]: true }));
+      
+      await api.patch(`/missions/${missionId}`, { 
+        chauffeur_id: newChauffeurId 
+      });
+      
+      setMissions(prevMissions =>
+        prevMissions.map(m =>
+          m.id === missionId ? { ...m, chauffeur_id: parseInt(newChauffeurId) } : m
+        )
+      );
+      
+      showToast('Chauffeur modifié avec succès', 'success');
+    } catch (error) {
+      console.error('Erreur changement chauffeur:', error);
+      showToast('Erreur lors du changement de chauffeur', 'error');
+    } finally {
+      setUpdatingChauffeur(prev => ({ ...prev, [missionId]: false }));
+    }
+  };
+
   const handleExportExcel = async () => {
     setExporting(true);
     try {
@@ -79,7 +133,7 @@ const ListeMissions = () => {
         responseType: 'blob'
       });
       
-      if (! response.data || response.data.size === 0) {
+      if (!response.data || response.data.size === 0) {
         throw new Error('Le fichier exporté est vide');
       }
       
@@ -95,7 +149,7 @@ const ListeMissions = () => {
         window.URL.revokeObjectURL(url);
       }, 100);
       
-      showToast('Export Excel réussi ! ', 'success');
+      showToast('Export Excel réussi !', 'success');
     } catch (error) {
       console.error('Erreur export:', error);
       const errorMessage = error.message || 'Erreur lors de l\'export Excel';
@@ -149,12 +203,12 @@ const ListeMissions = () => {
       return 'Chargement...';
     }
     
-    if (! chauffeurId) {
+    if (!chauffeurId) {
       return 'Non assigné';
     }
     
-    const chauffeur = chauffeurs.find(c => c. id === chauffeurId);
-    return chauffeur?. nom || 'Non assigné';
+    const chauffeur = chauffeurs.find(c => c.id === chauffeurId);
+    return chauffeur?.nom || 'Non assigné';
   }, [chauffeurs]);
 
   if (loading) {
@@ -177,7 +231,7 @@ const ListeMissions = () => {
         >
           <Download className="w-4 h-4" />
           <span className="hidden sm:inline">{exporting ? 'Export en cours...' : '📥 Exporter Excel'}</span>
-          <span className="sm:hidden">{exporting ? 'Export.. .' : '📥 Excel'}</span>
+          <span className="sm:hidden">{exporting ? 'Export...' : '📥 Excel'}</span>
         </Button>
       </div>
 
@@ -192,7 +246,7 @@ const ListeMissions = () => {
               <select
                 id="filter-statut"
                 value={filters.statut}
-                onChange={(e) => setFilters({ ...filters, statut: e. target.value })}
+                onChange={(e) => setFilters({ ...filters, statut: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Tous les statuts</option>
@@ -212,7 +266,7 @@ const ListeMissions = () => {
                 type="date"
                 value={filters.date_debut}
                 onChange={(e) => setFilters({ ...filters, date_debut: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus: ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div>
@@ -223,7 +277,7 @@ const ListeMissions = () => {
                 id="filter-date-fin"
                 type="date"
                 value={filters.date_fin}
-                onChange={(e) => setFilters({ ...filters, date_fin: e.target. value })}
+                onChange={(e) => setFilters({ ...filters, date_fin: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -231,7 +285,7 @@ const ListeMissions = () => {
         </div>
       </Card>
 
-      {missions.length === 0 ?  (
+      {missions.length === 0 ? (
         <Card>
           <p className="text-center text-gray-500 py-4">Aucune mission trouvée pour cette période</p>
           <p className="text-center text-gray-400 text-sm">Essayez de modifier les filtres de date</p>
@@ -240,21 +294,30 @@ const ListeMissions = () => {
         <div className="space-y-4">
           {missions.map((mission) => {
             const statutBadge = getStatutBadge(mission.statut);
+            const canSend = mission.statut === 'brouillon' && mission.chauffeur_id;
+            const isTerminee = mission.statut === 'terminee';
+            
             return (
               <Card key={mission.id}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-3 mb-2">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${statutBadge.color}`}>
-                        {statutBadge. label}
+                        {statutBadge.label}
                       </span>
+                      {/* Émoticône vert pour les missions terminées */}
+                      {isTerminee && (
+                        <span className="text-2xl" title="Mission terminée">
+                          🟢
+                        </span>
+                      )}
                       <span className="text-sm text-gray-500">
                         {formatMissionDateTime(mission.date_mission, mission.heure_prevue)}
                       </span>
                     </div>
                     
                     <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
-                      {mission. client || 'Client non spécifié'}
+                      {mission.client || 'Client non spécifié'}
                     </h3>
                     
                     {mission.client_telephone && (
@@ -292,11 +355,48 @@ const ListeMissions = () => {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-2 flex-shrink-0">
+                  {/* ACTIONS: Dropdown chauffeur + Bouton Envoyer + Supprimer */}
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    {/* Dropdown pour changer de chauffeur */}
+                    <select
+                      value={mission.chauffeur_id || ''}
+                      onChange={(e) => handleChangeChauffeur(mission.id, e.target.value)}
+                      disabled={updatingChauffeur[mission.id]}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white disabled:opacity-50"
+                      title="Changer le chauffeur"
+                    >
+                      <option value="">Non assigné</option>
+                      {chauffeurs.map(chauffeur => (
+                        <option key={chauffeur.id} value={chauffeur.id}>
+                          {chauffeur.nom}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Bouton Envoyer (visible seulement pour brouillon avec chauffeur) */}
+                    {canSend && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleSendToChauffeur(mission.id)}
+                        disabled={sending[mission.id]}
+                        className="flex items-center space-x-1"
+                        title="Envoyer au chauffeur"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span className="hidden md:inline">
+                          {sending[mission.id] ? 'Envoi...' : 'Envoyer'}
+                        </span>
+                      </Button>
+                    )}
+                    
+                    {/* Bouton Supprimer */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(mission.id)}
+                      className="hover:bg-red-50 hover:text-red-600"
+                      title="Supprimer la mission"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
