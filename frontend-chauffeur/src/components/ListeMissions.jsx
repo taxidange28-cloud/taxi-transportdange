@@ -8,7 +8,7 @@ function ListeMissions({ missions, onMissionUpdated }) {
   if (missions.length === 0) {
     return (
       <Card>
-        <CardContent sx={{ py: 8, textAlign:  'center' }}>
+        <CardContent sx={{ py: 8, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             Aucune mission assignée pour le moment
           </Typography>
@@ -22,8 +22,8 @@ function ListeMissions({ missions, onMissionUpdated }) {
 
   // Grouper les missions par date
   const missionsByDate = missions.reduce((acc, mission) => {
-    const date = mission. date_mission;
-    if (! acc[date]) {
+    const date = mission.date_mission;
+    if (!acc[date]) {
       acc[date] = [];
     }
     acc[date].push(mission);
@@ -40,7 +40,7 @@ function ListeMissions({ missions, onMissionUpdated }) {
       // Utiliser parseISO pour les dates au format YYYY-MM-DD
       const date = parseISO(dateString);
       
-      if (isNaN(date. getTime())) {
+      if (isNaN(date.getTime())) {
         return 'Date invalide';
       }
       
@@ -55,9 +55,8 @@ function ListeMissions({ missions, onMissionUpdated }) {
     <Box>
       {sortedDates.map((date) => {
         const dateMissions = missionsByDate[date];
-
         return (
-          <Box key={date} sx={{ mb:  4 }}>
+          <Box key={date} sx={{ mb: 4 }}>
             <Typography 
               variant="h6" 
               color="primary" 
@@ -65,8 +64,7 @@ function ListeMissions({ missions, onMissionUpdated }) {
             >
               📅 {formatDateSafely(date)}
             </Typography>
-
-            <Box sx={{ display:  'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {dateMissions.map((mission) => (
                 <CarteMission
                   key={mission.id}
