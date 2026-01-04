@@ -193,7 +193,7 @@ function CarteMission({ mission, onUpdated }) {
           {mission.notes && (
             <Box sx={{ my: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
               <Typography variant="body2" fontWeight="bold" gutterBottom>
-                📝 Notes:
+                📝 Notes: 
               </Typography>
               <Typography variant="body2">
                 {mission.notes}
@@ -205,12 +205,32 @@ function CarteMission({ mission, onUpdated }) {
             <Box sx={{ my: 2 }}>
               {mission.heure_pec && (
                 <Typography variant="body2" color="text.secondary">
-                  ⏰ Prise en charge: {format(new Date(mission.heure_pec), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                  ⏰ Prise en charge: {
+                    (() => {
+                      try {
+                        const date = new Date(mission.heure_pec);
+                        if (isNaN(date.getTime())) throw new Error('Invalid date');
+                        return format(date, 'dd/MM/yyyy HH:mm', { locale: fr });
+                      } catch (e) {
+                        return 'Date invalide';
+                      }
+                    })()
+                  }
                 </Typography>
               )}
               {mission.heure_depose && (
                 <Typography variant="body2" color="text.secondary">
-                  ⏰ Dépose: {format(new Date(mission.heure_depose), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                  ⏰ Dépose: {
+                    (() => {
+                      try {
+                        const date = new Date(mission.heure_depose);
+                        if (isNaN(date.getTime())) throw new Error('Invalid date');
+                        return format(date, 'dd/MM/yyyy HH:mm', { locale: fr });
+                      } catch (e) {
+                        return 'Date invalide';
+                      }
+                    })()
+                  }
                 </Typography>
               )}
               {mission.duree_minutes && (
