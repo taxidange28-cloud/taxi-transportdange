@@ -12,4 +12,4 @@ root.render(
 );
 
 // Enregistrer le service worker pour le mode PWA
-serviceWorkerRegistration.register();
+serviceWorkerRegistration.unregister();
