@@ -164,7 +164,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" color="primary">
-                    📅 {format(new Date(date + 'T00:00:00'), 'EEEE dd MMMM yyyy', { locale: fr })}
+                    📅 {date ? format(new Date(date + 'T00:00:00'), 'EEEE dd MMMM yyyy', { locale: fr }) : 'Date invalide'}
                   </Typography>
                   {brouillonMissions.length > 0 && (
                     <Button
