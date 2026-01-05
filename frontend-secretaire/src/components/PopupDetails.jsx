@@ -229,7 +229,17 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                   Date
                 </Typography>
                 <Typography variant="body1" fontWeight="600">
-                  {format(new Date(mission.date_mission + 'T00:00:00'), 'EEEE dd MMMM yyyy', { locale: fr })}
+                  {(() => {
+                    try {
+                      if (! mission.date_mission) return 'Date non définie';
+                      const dateObj = new Date(mission.date_mission + 'T00:00:00');
+                      if (isNaN(dateObj. getTime())) return 'Date invalide';
+                      return format(dateObj, 'EEEE dd MMMM yyyy', { locale: fr });
+                    } catch (e) {
+                      console.error('Erreur date popup:', mission.  date_mission, e);
+                      return 'Date invalide';
+                    }
+                  })()}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
