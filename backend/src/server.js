@@ -31,6 +31,7 @@ const corsOptions = {
     'http://localhost:5173',
     'http://localhost:3000',
     'https://transport-dange-frontend.onrender.com',
+    'https://transport-dange-chauffeur.onrender.com',
     'https://taxi-transportdange.onrender.com',
   ],
   credentials: true,
