@@ -100,17 +100,24 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
     }
   };
 
-  // Grouper les missions par date
-  const missionsByDate = missions.reduce((acc, mission) => {
-    const date = mission.date_mission;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(mission);
+// Grouper les missions par date (en filtrant les dates invalides)
+const missionsByDate = missions.reduce((acc, mission) => {
+  const date = mission.date_mission;
+  
+  // Ignorer les missions sans date valide
+  if (!date || date === 'null' || date === 'undefined' || date.trim() === '') {
+    console.warn('⚠️ Mission sans date valide:', mission);
     return acc;
-  }, {});
+  }
+  
+  if (!acc[date]) {
+    acc[date] = [];
+  }
+  acc[date].push(mission);
+  return acc;
+}, {});
 
-  const sortedDates = Object.keys(missionsByDate).sort();
+const sortedDates = Object.keys(missionsByDate).sort();
 
   // Compter les missions en brouillon
   const brouillonCount = missions.filter(m => m.statut === 'brouillon').length;
