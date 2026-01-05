@@ -104,9 +104,13 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
 const missionsByDate = missions.reduce((acc, mission) => {
   const date = mission.date_mission;
   
-  // Ignorer les missions sans date valide
-  if (!date || date === 'null' || date === 'undefined' || date.trim() === '') {
-    console.warn('⚠️ Mission sans date valide:', mission);
+  // ✅ CORRECTION : Vérifier le type AVANT d'appeler .trim()
+  if (!date || 
+      typeof date !== 'string' || 
+      date === 'null' || 
+      date === 'undefined' || 
+      date.trim() === '') {
+    console.warn('⚠️ Mission sans date valide:', mission.id, mission.client, 'Date:', date);
     return acc;
   }
   
