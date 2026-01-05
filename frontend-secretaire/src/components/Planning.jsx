@@ -164,7 +164,17 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" color="primary">
-                    📅 {date ? format(new Date(date + 'T00:00:00'), 'EEEE dd MMMM yyyy', { locale: fr }) : 'Date invalide'}
+                    📅 {(() => {
+                      try {
+                        if (!date) return 'Date non définie';
+                        const dateObj = new Date(date + 'T00:00:00');
+                        if (isNaN(dateObj.getTime())) return 'Date invalide';
+                        return format(dateObj, 'EEEE dd MMMM yyyy', { locale: fr });
+                      } catch (e) {
+                        console.error('Erreur date:', date, e);
+                        return 'Date invalide';
+                      }
+                    })()}
                   </Typography>
                   {brouillonMissions.length > 0 && (
                     <Button
