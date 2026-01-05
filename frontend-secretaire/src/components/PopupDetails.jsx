@@ -34,17 +34,17 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
 
   useEffect(() => {
     if (mission) {
-      setFormData({
-        date_mission: mission.date_mission,
-        heure_prevue: mission.heure_prevue,
-        client: mission.client,
-        type: mission.type,
-        adresse_depart: mission.adresse_depart,
-        adresse_arrivee: mission.adresse_arrivee,
-        chauffeur_id: mission.chauffeur_id || '',
-        notes: mission.notes || '',
-      });
-    }
+    setFormData({
+      date_mission: mission. date_mission || format(new Date(), 'yyyy-MM-dd'),  // ✅ Ajout du || format(...)
+      heure_prevue:  mission.heure_prevue,
+      client: mission.client,
+      type: mission.type,
+      adresse_depart:  mission.adresse_depart,
+      adresse_arrivee: mission.adresse_arrivee,
+      chauffeur_id: mission.chauffeur_id || '',
+      notes: mission.notes || '',
+    });
+  }
   }, [mission]);
 
   if (!mission) return null;
