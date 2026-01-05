@@ -44,7 +44,8 @@ function Dashboard() {
     return () => {
       removeSocketListeners();
     };
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     loadMissions();
