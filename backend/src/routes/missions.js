@@ -36,16 +36,21 @@ router.post('/:id/commentaire', verifyToken, validateCommentaire, MissionControl
 router.post('/fix-dates', verifyToken, requireSecretaire, async (req, res) => {
   try {
     const db = require('../config/database');
-    const [result] = await db.query(
+    
+    // Correction pour PostgreSQL
+    const result = await db.query(
       `UPDATE missions 
        SET date_mission = CURRENT_DATE 
        WHERE date_mission IS NULL`
     );
     
+    // PostgreSQL retourne result.rowCount au lieu de affectedRows
+    const rowsAffected = result.rowCount || result.affectedRows || 0;
+    
     res.json({ 
       success: true, 
       message: 'Dates corrigées avec succès',
-      rowsAffected: result.affectedRows || result.rowCount || 0
+      rowsAffected: rowsAffected
     });
   } catch (error) {
     console.error('Erreur correction dates:', error);
