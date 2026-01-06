@@ -100,28 +100,28 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
     }
   };
 
-// Grouper les missions par date (en filtrant les dates invalides)
-const missionsByDate = missions.reduce((acc, mission) => {
-  const date = mission.date_mission;
-  
-  // ✅ CORRECTION : Vérifier le type AVANT d'appeler .trim()
-  if (!date || 
-      typeof date !== 'string' || 
-      date === 'null' || 
-      date === 'undefined' || 
-      date.trim() === '') {
-    console.warn('⚠️ Mission sans date valide:', mission.id, mission.client, 'Date:', date);
+  // Grouper les missions par date (en filtrant les dates invalides)
+  const missionsByDate = missions.reduce((acc, mission) => {
+    const date = mission.date_mission;
+    
+    // ✅ CORRECTION : Vérifier le type AVANT d'appeler .trim()
+    if (!date || 
+        typeof date !== 'string' || 
+        date === 'null' || 
+        date === 'undefined' || 
+        date.trim() === '') {
+      console.warn('⚠️ Mission sans date valide:', mission.id, mission.client, 'Date:', date);
+      return acc;
+    }
+    
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(mission);
     return acc;
-  }
-  
-  if (!acc[date]) {
-    acc[date] = [];
-  }
-  acc[date].push(mission);
-  return acc;
-}, {});
+  }, {});
 
-const sortedDates = Object.keys(missionsByDate).sort();
+  const sortedDates = Object.keys(missionsByDate).sort();
 
   // Compter les missions en brouillon
   const brouillonCount = missions.filter(m => m.statut === 'brouillon').length;
@@ -178,11 +178,10 @@ const sortedDates = Object.keys(missionsByDate).sort();
                     📅 {(() => {
                       try {
                         if (!date) return 'Date non définie';
-    
+
                         // ✅ CORRECTION : Extraire seulement YYYY-MM-DD avant d'ajouter l'heure
                         const dateOnly = date.split('T')[0];
-                        const dateOnly = date.split('T')[0];
-                        const dateObj = new Date(dateOnly + 'T00:00:00');;
+                        const dateObj = new Date(dateOnly + 'T00:00:00');
                         
                         if (isNaN(dateObj.getTime())) return 'Date invalide';
                         return format(dateObj, 'EEEE dd MMMM yyyy', { locale: fr });
