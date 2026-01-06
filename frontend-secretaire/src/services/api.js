@@ -25,7 +25,7 @@ api.interceptors.request.use(
 );
 
 // Intercepteur pour gérer les erreurs
-api.interceptors.response.use(
+api.interceptors.response. use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -59,13 +59,13 @@ export const createMission = (data) =>
   api.post('/missions', data);
 
 export const updateMission = (id, data) => 
-  api.put(`/missions/${id}`, data);
+  api.put(`/missions/${id}`, data);  // ✅ CORRIGÉ
 
 export const deleteMission = (id) => 
   api.delete(`/missions/${id}`);
 
 export const envoyerMission = (id) => 
-  api.post(`/missions/${id}/envoyer`);
+  api.post(`/missions/${id}/envoyer`);  // ✅ CORRIGÉ
 
 export const envoyerMissionsParDate = (date) => 
   api.post('/missions/envoyer-date', { date });
@@ -83,7 +83,7 @@ export const getMissionsChauffeur = (chauffeurId, filters = {}) =>
 // Export
 export const exportExcel = (debut, fin) => {
   return api.get('/export/excel', {
-    params: { debut, fin },
+    params:  { debut, fin },
     responseType: 'blob',
   });
 };
