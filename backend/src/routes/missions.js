@@ -32,4 +32,28 @@ router.post('/:id/pec', verifyToken, requireChauffeur, MissionController.priseEn
 router.post('/:id/terminer', verifyToken, requireChauffeur, MissionController.terminer);
 router.post('/:id/commentaire', verifyToken, validateCommentaire, MissionController.ajouterCommentaire);
 
+// Route temporaire pour corriger les dates NULL
+router.post('/fix-dates', verifyToken, requireSecretaire, async (req, res) => {
+  try {
+    const db = require('../config/database');
+    const [result] = await db.query(
+      `UPDATE missions 
+       SET date_mission = CURRENT_DATE 
+       WHERE date_mission IS NULL`
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Dates corrigées avec succès',
+      rowsAffected: result.affectedRows || result.rowCount || 0
+    });
+  } catch (error) {
+    console.error('Erreur correction dates:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
