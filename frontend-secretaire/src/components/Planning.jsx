@@ -178,7 +178,12 @@ const sortedDates = Object.keys(missionsByDate).sort();
                     📅 {(() => {
                       try {
                         if (!date) return 'Date non définie';
-                        const dateObj = new Date(date + 'T00:00:00');
+    
+                        // ✅ CORRECTION : Extraire seulement YYYY-MM-DD avant d'ajouter l'heure
+                        const dateOnly = date.split('T')[0];
+                        const dateOnly = date.split('T')[0];
+                        const dateObj = new Date(dateOnly + 'T00:00:00');;
+                        
                         if (isNaN(dateObj.getTime())) return 'Date invalide';
                         return format(dateObj, 'EEEE dd MMMM yyyy', { locale: fr });
                       } catch (e) {
