@@ -19,11 +19,11 @@ import { fr } from 'date-fns/locale';
 
 const getStatutInfo = (statut) => {
   const statutMap = {
-    'brouillon': { label: 'Brouillon', color: '#BDBDBD', emoji: '⚪' },
+    'brouillon':  { label: 'Brouillon', color: '#BDBDBD', emoji: '⚪' },
     'envoyee': { label: 'Envoyée', color: '#2196F3', emoji: '🔵' },
     'confirmee': { label: 'Confirmée', color: '#FFC107', emoji: '🟡' },
-    'pec': { label: 'En cours', color: '#F44336', emoji: '🔴' },
-    'terminee': { label: 'Terminée', color: '#4CAF50', emoji: '🟢' },
+    'pec':  { label: 'En cours', color: '#F44336', emoji: '🔴' },
+    'terminee': { label:  'Terminée', color:  '#4CAF50', emoji:  '🟢' },
   };
   return statutMap[statut] || statutMap['brouillon'];
 };
@@ -34,17 +34,17 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
 
   useEffect(() => {
     if (mission) {
-    setFormData({
-      date_mission: mission. date_mission || format(new Date(), 'yyyy-MM-dd'),  // ✅ Ajout du || format(...)
-      heure_prevue:  mission.heure_prevue,
-      client: mission.client,
-      type: mission.type,
-      adresse_depart:  mission.adresse_depart,
-      adresse_arrivee: mission.adresse_arrivee,
-      chauffeur_id: mission.chauffeur_id || '',
-      notes: mission.notes || '',
-    });
-  }
+      setFormData({
+        date_mission: mission. date_mission || format(new Date(), 'yyyy-MM-dd'),
+        heure_prevue: mission.heure_prevue || '08:00',
+        client: mission.client || '',
+        type: mission.type || 'CPAM',
+        adresse_depart: mission.adresse_depart || '',
+        adresse_arrivee: mission.adresse_arrivee || '',
+        chauffeur_id: mission. chauffeur_id || '',
+        notes: mission.notes || '',
+      });
+    }
   }, [mission]);
 
   if (!mission) return null;
@@ -53,7 +53,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
   const canModify = mission.statut !== 'pec' && mission.statut !== 'terminee';
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e. target;
     setFormData({
       ...formData,
       [name]: value,
@@ -65,13 +65,14 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
     try {
       const updateData = {
         ...formData,
-        chauffeur_id: formData.chauffeur_id ? parseInt(formData.chauffeur_id) : null,
+        date_mission: formData.date_mission ? formData.date_mission. split('T')[0] : formData.date_mission,
+        chauffeur_id: formData. chauffeur_id ? parseInt(formData.chauffeur_id) : null,
       };
-      await updateMission(mission.id, updateData);
+      await updateMission(mission. id, updateData);
       onSuccess();
     } catch (error) {
       console.error('Erreur modification mission:', error);
-      alert(error.response?.data?.error || 'Erreur lors de la modification');
+      alert(error.response?. data?.error || 'Erreur lors de la modification');
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white' }}>
+      <DialogTitle sx={{ bgcolor: 'primary. main', color: 'white' }}>
         📋 Détails de la Mission
       </DialogTitle>
       <DialogContent sx={{ mt: 2 }}>
@@ -104,7 +105,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
           <Chip
             label={`${statutInfo.emoji} ${statutInfo.label}`}
             sx={{
-              bgcolor: statutInfo.color,
+              bgcolor: statutInfo. color,
               color: 'white',
               fontWeight: 'bold',
               fontSize: '1rem',
@@ -121,7 +122,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                 label="Date de la mission"
                 name="date_mission"
                 type="date"
-                value={formData.date_mission}
+                value={formData. date_mission}
                 onChange={handleChange}
                 InputLabelProps={{ shrink: true }}
                 required
@@ -135,7 +136,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                 type="time"
                 value={formData.heure_prevue}
                 onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ shrink:  true }}
                 required
               />
             </Grid>
@@ -201,7 +202,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                 onChange={handleChange}
               >
                 <MenuItem value="">Non assigné</MenuItem>
-                {chauffeurs.map((chauffeur) => (
+                {chauffeurs. map((chauffeur) => (
                   <MenuItem key={chauffeur.id} value={chauffeur.id}>
                     {chauffeur.nom}
                   </MenuItem>
@@ -231,12 +232,28 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                 <Typography variant="body1" fontWeight="600">
                   {(() => {
                     try {
-                      if (! mission.date_mission) return 'Date non définie';
-                      const dateObj = new Date(mission.date_mission + 'T00:00:00');
-                      if (isNaN(dateObj. getTime())) return 'Date invalide';
+                      const date = mission.date_mission;
+                      
+                      // ✅ CORRECTION : Vérifier le type et la validité AVANT d'utiliser la date
+                      if (! date || 
+                          typeof date !== 'string' || 
+                          date === 'null' || 
+                          date === 'undefined' || 
+                          date. trim() === '') {
+                        return 'Date non définie';
+                      }
+                      
+                      // ✅ Extraire seulement YYYY-MM-DD avant d'ajouter l'heure
+                      const dateOnly = date.split('T')[0];
+                      const dateObj = new Date(dateOnly + 'T00:00:00');
+                      
+                      if (isNaN(dateObj.getTime())) {
+                        return 'Date invalide';
+                      }
+                      
                       return format(dateObj, 'EEEE dd MMMM yyyy', { locale: fr });
                     } catch (e) {
-                      console.error('Erreur date popup:', mission.  date_mission, e);
+                      console.error('Erreur date popup:', mission.date_mission, e);
                       return 'Date invalide';
                     }
                   })()}
@@ -247,7 +264,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                   Heure prévue
                 </Typography>
                 <Typography variant="body1" fontWeight="600">
-                  {mission.heure_prevue}
+                  {mission. heure_prevue}
                 </Typography>
               </Grid>
 
@@ -275,7 +292,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                   Adresse de départ
                 </Typography>
                 <Typography variant="body1">
-                  📍 {mission.adresse_depart}
+                  ���� {mission. adresse_depart}
                 </Typography>
               </Grid>
 
@@ -325,7 +342,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
                     </Grid>
                   )}
 
-                  {mission.heure_depose && (
+                  {mission. heure_depose && (
                     <Grid item xs={12} sm={6}>
                       <Typography variant="body2" color="text.secondary">
                         Heure de dépose
@@ -364,7 +381,7 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
           </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 2, gap: 1 }}>
+      <DialogActions sx={{ p: 2, gap:  1 }}>
         {editMode ? (
           <>
             <Button onClick={() => onEditModeChange(false)} disabled={loading}>
