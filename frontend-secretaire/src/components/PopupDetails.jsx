@@ -37,7 +37,8 @@ function PopupDetails({ open, onClose, mission, chauffeurs, editMode, onEditMode
       setFormData({
         // ✅ CORRECTION : Extraire seulement YYYY-MM-DD de la date ISO
         date_mission: mission.date_mission ? mission.date_mission.split('T')[0] : format(new Date(), 'yyyy-MM-dd'),
-        heure_prevue: mission.heure_prevue || '08:00',
+        // ✅ CORRECTION : Extraire seulement HH:MM de l'heure (sans les secondes)
+        heure_prevue: mission.heure_prevue ? mission.heure_prevue.substring(0, 5) : '08:00',
         client: mission.client || '',
         type: mission.type || 'CPAM',
         adresse_depart: mission.adresse_depart || '',
