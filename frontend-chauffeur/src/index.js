@@ -12,4 +12,13 @@ root.render(
 );
 
 // Enregistrer le service worker pour le mode PWA
-serviceWorkerRegistration.unregister();
+// ✅ ACTIVER le service worker
+serviceWorkerRegistration.register({
+  onSuccess: () => console.log('✅ Service Worker enregistré avec succès'),
+  onUpdate: (registration) => {
+    console.log('🔄 Nouvelle version disponible');
+    if (registration && registration.waiting) {
+      registration. waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  },
+});
