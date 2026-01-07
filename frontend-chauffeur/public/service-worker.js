@@ -1,67 +1,89 @@
 /* eslint-disable no-restricted-globals */
-import { clientsClaim } from 'workbox-core';
-import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
 
-clientsClaim();
+// Service Worker pour PWA et notifications
+const CACHE_NAME = 'transport-dange-chauffeur-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/static/css/main.css',
+  '/static/js/main.js',
+  '/logo192.png',
+  '/logo512.png',
+  '/manifest.json'
+];
 
-// Precache des fichiers générés par le build
-precacheAndRoute(self.__WB_MANIFEST);
-
-// App Shell style routing
-const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
-registerRoute(
-  ({ request, url }) => {
-    if (request.mode !== 'navigate') {
-      return false;
-    }
-    if (url.pathname.startsWith('/_')) {
-      return false;
-    }
-    if (url.pathname.match(fileExtensionRegexp)) {
-      return false;
-    }
-    return true;
-  },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
-);
-
-// Cache des images
-registerRoute(
-  ({ url }) => url.origin === self.location.origin && url.pathname.endsWith('.png'),
-  new StaleWhileRevalidate({
-    cacheName: 'images',
-    plugins: [
-      new ExpirationPlugin({ maxEntries: 50 }),
-    ],
-  })
-);
-
-// Message handling
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+// Installation du Service Worker
+self.addEventListener('install', (event) => {
+  console.log('🔧 Service Worker : Installation...');
   
-  // ✅ Gestion du KEEP-ALIVE
-  if (event.data && event.data.type === 'KEEP_ALIVE') {
-    if (event.ports && event.ports[0]) {
-      event.ports[0].postMessage({ type: 'ALIVE', timestamp: Date.now() });
-    }
-  }
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('📦 Cache ouvert');
+        return cache.addAll(urlsToCache).catch(err => {
+          console.warn('⚠️ Plusieurs fichiers n\'ont pas pu être mis en cache :', err);
+          throw err; // Assurez-vous que l'erreur remonte
+        });
+      })
+      .then(() => {
+        console.log('✅ Service Worker installé');
+        return self.skipWaiting();
+      })
+  );
 });
 
-// ✅ Gestion des Push Notifications
+// Activation du Service Worker
+self.addEventListener('activate', (event) => {
+  console.log('✅ Service Worker : Activation...');
+  
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('🗑️ Suppression de l\'ancien cache :', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      console.log('✅ Service Worker activé');
+      return self.clients.claim();
+    })
+  );
+});
+
+// Interception des requêtes
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.ok) { // Vérifiez que la réponse est valide
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Retourne une réponse du cache si disponible, sinon échoue silencieusement
+        return caches.match(event.request);
+      })
+  );
+});
+
+// Gestion des Push Notifications
 self.addEventListener('push', (event) => {
   console.log('📩 Push notification reçue :', event);
   
-  let notificationData = {
+  const notificationData = {
     title: '🚖 Transport DanGE',
     body: 'Nouvelle mission disponible',
     icon: '/logo192.png',
     badge: '/logo192.png',
+    tag: 'mission-notification',
+    requireInteraction: true,
     vibrate: [500, 200, 500, 200, 500],
     data: {},
     actions: [
@@ -81,7 +103,7 @@ self.addEventListener('push', (event) => {
         notificationData.data = payload.data || {};
       }
     } catch (e) {
-      console.error('❌ Erreur parsing push data :', e);
+      console.error('❌ Erreur lors du parsing des données push :', e);
     }
   }
 
@@ -90,7 +112,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// ✅ Gestion des clics sur notifications
+// Gestion des clics sur les notifications
 self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification cliquée :', event.action);
   
@@ -102,14 +124,11 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Si l'app est ouverte, la mettre au premier plan
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
+      for (const client of clientList) {
         if (client.url.includes('/') && 'focus' in client) {
           return client.focus();
         }
       }
-      // Sinon, ouvrir une nouvelle fenêtre
       if (clients.openWindow) {
         return clients.openWindow('/');
       }
@@ -117,11 +136,15 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ✅ Gestion des erreurs générales
-self.addEventListener('error', (error) => {
-  console.error('Erreur dans Service Worker :', error);
-});
-
-self.addEventListener('unhandledrejection', (event) => {
-  console.error('Rejection non gérée :', event.reason);
+// Gestion des messages
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'KEEP_ALIVE') {
+    if (event.ports && event.ports[0]) {
+      event.ports[0].postMessage({ type: 'ALIVE', timestamp: Date.now() });
+    }
+  }
 });
