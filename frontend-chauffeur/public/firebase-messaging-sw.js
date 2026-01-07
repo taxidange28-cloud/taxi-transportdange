@@ -36,10 +36,10 @@ messaging.onBackgroundMessage((payload) => {
       ]
     };
 
-    // Afficher la notification à l'utilisateur
+    // Afficher la notification
     self.registration.showNotification(notificationTitle, notificationOptions);
 
-    // Jouer le son trois fois de suite
+    // Jouer le son trois fois
     const audio = new Audio(notificationSoundBase64);
     let playCount = 0;
 
