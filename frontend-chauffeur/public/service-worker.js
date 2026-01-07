@@ -13,7 +13,7 @@ const urlsToCache = [
 ];
 
 // Son encodé en Base64
-const NOTIFICATION_SOUND_BASE64 = "data:audio/wav;base64,UklGRiQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAEAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//...";
+const NOTIFICATION_SOUND_BASE64 = "data:audio/wav;base64,UklGRiQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAEAAD//wAA//8AAP//AAD//wAA//...";
 
 // Installation du Service Worker
 self.addEventListener('install', (event) => {
@@ -98,7 +98,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(notificationData.title, notificationData)
   );
 
-  // Jouer le son 3 fois de suite
+  // Jouer le son 3 fois
   const audio = new Audio(NOTIFICATION_SOUND_BASE64);
   let playCount = 0;
 
@@ -118,10 +118,10 @@ self.addEventListener('push', (event) => {
 // Gestion des clics sur les notifications
 self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification cliquée :', event.action);
-
+  
   const audio = new Audio(NOTIFICATION_SOUND_BASE64);
   let playCount = 0;
-  
+
   function playSoundRepeatedly() {
     if (playCount < 3) {
       audio.play();
@@ -133,8 +133,6 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   event.notification.close();
-
-  // Jouer le son à nouveau lors du clic
   playSoundRepeatedly();
 
   event.waitUntil(
