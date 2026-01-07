@@ -45,7 +45,7 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
   
-  // ✅ NOUVEAU : Keep-alive
+  // ✅ Gestion du KEEP-ALIVE
   if (event.data && event.data.type === 'KEEP_ALIVE') {
     if (event.ports && event.ports[0]) {
       event.ports[0].postMessage({ type: 'ALIVE', timestamp: Date.now() });
@@ -53,7 +53,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// ✅ NOUVEAU : Gestion des Push Notifications
+// ✅ Gestion des Push Notifications
 self.addEventListener('push', (event) => {
   console.log('📩 Push notification reçue :', event);
   
@@ -62,8 +62,6 @@ self.addEventListener('push', (event) => {
     body: 'Nouvelle mission disponible',
     icon: '/logo192.png',
     badge: '/logo192.png',
-    tag: 'mission-notification',
-    requireInteraction: true,
     vibrate: [500, 200, 500, 200, 500],
     data: {},
     actions: [
@@ -92,7 +90,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// ✅ AMÉLIORÉ : Notification click handler
+// ✅ Gestion des clics sur notifications
 self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification cliquée :', event.action);
   
@@ -104,7 +102,7 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Si l'app est déjà ouverte, la mettre au premier plan
+      // Si l'app est ouverte, la mettre au premier plan
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
         if (client.url.includes('/') && 'focus' in client) {
@@ -117,4 +115,13 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
+});
+
+// ✅ Gestion des erreurs générales
+self.addEventListener('error', (error) => {
+  console.error('Erreur dans Service Worker :', error);
+});
+
+self.addEventListener('unhandledrejection', (event) => {
+  console.error('Rejection non gérée :', event.reason);
 });
