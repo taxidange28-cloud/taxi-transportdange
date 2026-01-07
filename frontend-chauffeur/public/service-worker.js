@@ -12,6 +12,9 @@ const urlsToCache = [
   '/manifest.json'
 ];
 
+// Son encodé en Base64
+const NOTIFICATION_SOUND_BASE64 = "data:audio/wav;base64,UklGRiQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAEAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//...";
+
 // Installation du Service Worker
 self.addEventListener('install', (event) => {
   console.log('🔧 Service Worker : Installation...');
@@ -82,7 +85,6 @@ self.addEventListener('push', (event) => {
     icon: '/logo192.png',
     badge: '/logo192.png',
     vibrate: [500, 200, 500, 200, 500],
-    sound: '/audio/mission.mp3', // Exemple de son personnalisé
     tag: 'mission-notification',
     requireInteraction: true,
     actions: [
@@ -91,7 +93,60 @@ self.addEventListener('push', (event) => {
     ]
   };
 
+  // Afficher la notification
   event.waitUntil(
     self.registration.showNotification(notificationData.title, notificationData)
+  );
+
+  // Jouer le son 3 fois de suite
+  const audio = new Audio(NOTIFICATION_SOUND_BASE64);
+  let playCount = 0;
+
+  function playSoundRepeatedly() {
+    if (playCount < 3) {
+      audio.play();
+      audio.onended = () => {
+        playCount++;
+        playSoundRepeatedly();
+      };
+    }
+  }
+
+  playSoundRepeatedly();
+});
+
+// Gestion des clics sur les notifications
+self.addEventListener('notificationclick', (event) => {
+  console.log('🔔 Notification cliquée :', event.action);
+
+  const audio = new Audio(NOTIFICATION_SOUND_BASE64);
+  let playCount = 0;
+  
+  function playSoundRepeatedly() {
+    if (playCount < 3) {
+      audio.play();
+      audio.onended = () => {
+        playCount++;
+        playSoundRepeatedly();
+      };
+    }
+  }
+
+  event.notification.close();
+
+  // Jouer le son à nouveau lors du clic
+  playSoundRepeatedly();
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes('/') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
   );
 });
