@@ -14,6 +14,9 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Son encodé en Base64
+const notificationSoundBase64 = "data:audio/wav;base64,UklGRiQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAEAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//...";
+
 // Gestion des messages en arrière-plan
 messaging.onBackgroundMessage((payload) => {
   try {
@@ -25,7 +28,6 @@ messaging.onBackgroundMessage((payload) => {
       icon: '/logo192.png',
       badge: '/logo192.png',
       vibrate: [500, 200, 500, 200, 500],
-      sound: '/audio/mission.mp3', // Ajout du son
       tag: 'mission-notification',
       requireInteraction: true,
       actions: [
@@ -34,7 +36,24 @@ messaging.onBackgroundMessage((payload) => {
       ]
     };
 
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+    // Afficher la notification à l'utilisateur
+    self.registration.showNotification(notificationTitle, notificationOptions);
+
+    // Jouer le son trois fois de suite
+    const audio = new Audio(notificationSoundBase64);
+    let playCount = 0;
+
+    function playSoundRepeatedly() {
+      if (playCount < 3) {
+        audio.play();
+        audio.onended = () => {
+          playCount++;
+          playSoundRepeatedly();
+        };
+      }
+    }
+
+    playSoundRepeatedly();
   } catch (error) {
     console.error('Erreur lors de la réception du message en arrière-plan :', error);
   }
