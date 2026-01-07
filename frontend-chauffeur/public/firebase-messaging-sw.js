@@ -14,10 +14,10 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Gestion des messages en arrière-plan avec gestion des erreurs
+// Gestion des messages en arrière-plan
 messaging.onBackgroundMessage((payload) => {
   try {
-    console.log('📩 Message reçu en arrière-plan:', payload);
+    console.log('📩 Message reçu en arrière-plan :', payload);
 
     const notificationTitle = payload.notification?.title || '🚖 Nouvelle Mission';
     const notificationOptions = {
@@ -25,7 +25,7 @@ messaging.onBackgroundMessage((payload) => {
       icon: '/logo192.png',
       badge: '/logo192.png',
       vibrate: [500, 200, 500, 200, 500],
-      data: payload.data || {},
+      sound: '/audio/mission.mp3', // Ajout du son
       tag: 'mission-notification',
       requireInteraction: true,
       actions: [
@@ -36,28 +36,6 @@ messaging.onBackgroundMessage((payload) => {
 
     return self.registration.showNotification(notificationTitle, notificationOptions);
   } catch (error) {
-    console.error('Erreur lors de la réception du message en arrière-plan:', error);
-  }
-});
-
-// Gestion du clic sur la notification
-self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 Notification cliquée:', event.action);
-  
-  event.notification.close();
-
-  if (event.action === 'view' || !event.action) {
-    event.waitUntil(
-      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes('/') && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-    );
+    console.error('Erreur lors de la réception du message en arrière-plan :', error);
   }
 });
