@@ -4,12 +4,12 @@ import { enregistrerFcmToken } from './api';
 
 // Configuration Firebase (à adapter avec vos vraies valeurs)
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  apiKey: process. env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env. REACT_APP_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  appId: process.env. REACT_APP_FIREBASE_APP_ID,
 };
 
 let app;
@@ -17,7 +17,7 @@ let messaging;
 
 export const initializeFirebase = () => {
   try {
-    if (!app) {
+    if (! app) {
       app = initializeApp(firebaseConfig);
       messaging = getMessaging(app);
       console.log('✅ Firebase initialisé');
@@ -79,6 +79,43 @@ export const getFCMToken = async (chauffeurId) => {
   }
 };
 
+// ✅ FONCTION AMÉLIORÉE POUR JOUER LE SON 3 FOIS
+const playNotificationSound = () => {
+  try {
+    console.log('🔊 Tentative de lecture du son...');
+    
+    const audio = new Audio('/notification-sound.mp3'); // ✅ Nom corrigé
+    audio.volume = 1. 0;
+    
+    let playCount = 0;
+    const maxPlays = 3;
+    
+    const playNext = () => {
+      if (playCount < maxPlays) {
+        audio.currentTime = 0;
+        audio.play()
+          .then(() => {
+            console.log(`✅ Son joué ${playCount + 1}/${maxPlays}`);
+            playCount++;
+          })
+          .catch(err => {
+            console.error(`❌ Erreur lecture son: `, err);
+          });
+      }
+    };
+    
+    audio.addEventListener('ended', playNext);
+    audio.addEventListener('error', (e) => {
+      console.error('❌ Erreur chargement audio:', e);
+    });
+    
+    playNext();
+    
+  } catch (error) {
+    console.error('❌ Erreur son:', error);
+  }
+};
+
 export const onMessageListener = (callback) => {
   const { messaging } = initializeFirebase();
   if (!messaging) {
@@ -86,29 +123,26 @@ export const onMessageListener = (callback) => {
   }
 
   return onMessage(messaging, (payload) => {
-    console.log('Message reçu:', payload);
+    console.log('📩 Message reçu:', payload);
+    
+    // ✅ JOUER LE SON EN PREMIER
+    playNotificationSound();
     
     // Afficher une notification
     if (payload.notification) {
-      const notificationTitle = payload.notification.title || 'Transport DanGE';
+      const notificationTitle = payload. notification.title || '🚖 Transport DanGE';
       const notificationOptions = {
         body: payload.notification.body,
-        icon: '/logo-192.png',
-        badge: '/logo-192.png',
-        vibrate: [500, 200, 500],
+        icon: '/logo192.png', // ✅ Nom corrigé
+        badge: '/logo192.png', // ✅ Nom corrigé
+        vibrate: [1000, 500, 1000, 500, 1000], // ✅ Vibration plus longue
+        requireInteraction: true, // ✅ La notification reste visible
+        tag: 'mission-' + Date.now(), // ✅ Tag unique
         data: payload.data,
       };
 
-      if (Notification.permission === 'granted') {
+      if (Notification. permission === 'granted') {
         new Notification(notificationTitle, notificationOptions);
-      }
-
-      // Son de notification (optionnel)
-      try {
-        const audio = new Audio('/notification.mp3');
-        audio.play().catch(e => console.log('Son non joué:', e));
-      } catch (e) {
-        // Ignorer si pas de fichier son
       }
     }
 
@@ -116,9 +150,13 @@ export const onMessageListener = (callback) => {
   });
 };
 
+// ✅ EXPORTER LA FONCTION playNotificationSound POUR LES TESTS
+export { playNotificationSound };
+
 export default {
   initializeFirebase,
   requestNotificationPermission,
   getFCMToken,
   onMessageListener,
+  playNotificationSound, // ✅ Ajouté
 };
