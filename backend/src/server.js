@@ -18,6 +18,7 @@ const chauffeurMissionsRoutes = require('./routes/chauffeurs-missions');
 const exportRoutes = require('./routes/export');
 const initRoutes = require('./routes/initRoutes');
 const adminRoutes = require('./routes/admin');
+const notificationRoutes = require('./routes/notifications');
 
 // Initialiser l'application
 const app = express();
@@ -72,6 +73,7 @@ app.use('/api/chauffeurs', chauffeurRoutes);
 app.use('/api/chauffeurs', chauffeurMissionsRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api', initRoutes);
 
 // Route de test
