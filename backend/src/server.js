@@ -112,7 +112,7 @@ io.on('connection', (socket) => {
 });
 
 // Initialiser Firebase
-// initializeFirebase();
+initializeFirebase();
 
 // Démarrer le serveur
 const PORT = process.env.PORT || 3000;
