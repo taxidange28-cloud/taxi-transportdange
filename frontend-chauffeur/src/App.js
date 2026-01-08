@@ -100,9 +100,8 @@ function App() {
     }
 
     // Afficher le bouton de test du son en mode développement
-    if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
-      setSoundTestVisible(true);
-    }
+    setSoundTestVisible(true);
+  
   }, []);
 
   const handleTestSound = () => {
