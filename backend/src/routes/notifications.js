@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { auth, authorize } = require('../middleware/auth');
+const { verifyToken, requireSecretaire } = require('../middleware/auth');
 const notificationController = require('../controllers/notificationController');
 
 // Envoyer une notification à un chauffeur spécifique
 router.post(
   '/send',
-  auth,
-  authorize('secretaire', 'admin'),
-  notificationController.sendNotificationToDriver
+  verifyToken,
+  requireSecretaire,
+  notificationController. sendNotificationToDriver
 );
 
 // Envoyer une notification à tous les chauffeurs
-router.post(
+router. post(
   '/send-all',
-  auth,
-  authorize('secretaire', 'admin'),
+  verifyToken,
+  requireSecretaire,
   notificationController.sendNotificationToAllDrivers
 );
 
