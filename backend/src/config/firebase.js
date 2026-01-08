@@ -1,50 +1,46 @@
 const admin = require('firebase-admin');
-require('dotenv').config();
 
-let firebaseApp = null;
+let firebaseInitialized = false;
 
 const initializeFirebase = () => {
+  if (firebaseInitialized) {
+    console.log('✅ Firebase Admin déjà initialisé');
+    return admin;
+  }
+
   try {
-    // Vérifier si Firebase est déjà initialisé
-    if (firebaseApp) {
-      return firebaseApp;
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        projectId: serviceAccount.project_id || 'transport-dange'
+      });
+      
+      firebaseInitialized = true;
+      console.log('✅ Firebase Admin SDK initialisé avec succès');
+      console.log('📧 Service Account:', serviceAccount.client_email);
+      console.log('🆔 Project ID:', serviceAccount.project_id);
+    } else {
+      console.warn('⚠️ Variable FIREBASE_SERVICE_ACCOUNT non trouvée');
+      console.warn('⚠️ Les notifications push ne fonctionneront pas');
     }
-
-    // Configuration depuis les variables d'environnement
-    const serviceAccount = {
-      type: 'service_account',
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    };
-
-    // Vérifier que les variables sont définies
-    if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
-      console.warn('⚠️  Firebase non configuré - Les notifications push ne fonctionneront pas');
-      return null;
-    }
-
-    firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-
-    console.log('✅ Firebase Admin SDK initialisé');
-    return firebaseApp;
-
   } catch (error) {
     console.error('❌ Erreur initialisation Firebase:', error.message);
-    return null;
   }
+
+  return admin;
 };
 
 const getMessaging = () => {
-  if (!firebaseApp) {
+  if (!firebaseInitialized) {
     initializeFirebase();
   }
-  return firebaseApp ? admin.messaging() : null;
+  
+  return firebaseInitialized ? admin.messaging() : null;
 };
 
-module.exports = {
+module.exports = { 
   initializeFirebase,
-  getMessaging,
+  getMessaging
 };
