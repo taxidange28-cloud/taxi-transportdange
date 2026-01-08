@@ -2,14 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { enregistrerFcmToken } from './api';
 
-// Configuration Firebase (à adapter avec vos vraies valeurs)
 const firebaseConfig = {
-  apiKey: process. env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env. REACT_APP_FIREBASE_AUTH_DOMAIN,
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env. REACT_APP_FIREBASE_APP_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
 let app;
@@ -17,7 +16,7 @@ let messaging;
 
 export const initializeFirebase = () => {
   try {
-    if (! app) {
+    if (!app) {
       app = initializeApp(firebaseConfig);
       messaging = getMessaging(app);
       console.log('✅ Firebase initialisé');
@@ -65,7 +64,6 @@ export const getFCMToken = async (chauffeurId) => {
     if (currentToken) {
       console.log('✅ Token FCM obtenu:', currentToken);
       
-      // Enregistrer le token sur le serveur
       await enregistrerFcmToken(chauffeurId, currentToken);
       
       return currentToken;
@@ -79,13 +77,12 @@ export const getFCMToken = async (chauffeurId) => {
   }
 };
 
-// ✅ FONCTION AMÉLIORÉE POUR JOUER LE SON 3 FOIS
 const playNotificationSound = () => {
   try {
-    console.log('🔊 Tentative de lecture du son...');
+    console.log('🔊 Lecture du son...');
     
-    const audio = new Audio('/notification-sound.mp3'); // ✅ Nom corrigé
-    audio.volume = 1. 0;
+    const audio = new Audio('/notification-sound.mp3');
+    audio.volume = 1.0;
     
     let playCount = 0;
     const maxPlays = 3;
@@ -98,19 +95,14 @@ const playNotificationSound = () => {
             console.log(`✅ Son joué ${playCount + 1}/${maxPlays}`);
             playCount++;
           })
-          .catch(err => {
-            console.error(`❌ Erreur lecture son: `, err);
-          });
+          .catch(err => console.error('❌ Erreur son:', err));
       }
     };
     
     audio.addEventListener('ended', playNext);
-    audio.addEventListener('error', (e) => {
-      console.error('❌ Erreur chargement audio:', e);
-    });
+    audio.addEventListener('error', (e) => console.error('❌ Erreur audio:', e));
     
     playNext();
-    
   } catch (error) {
     console.error('❌ Erreur son:', error);
   }
@@ -125,32 +117,29 @@ export const onMessageListener = (callback) => {
   return onMessage(messaging, (payload) => {
     console.log('📩 Message reçu:', payload);
     
-    // ✅ JOUER LE SON EN PREMIER
     playNotificationSound();
     
-    // Afficher une notification
     if (payload.notification) {
-      const notificationTitle = payload. notification.title || '🚖 Transport DanGE';
+      const notificationTitle = payload.notification.title || '🚖 Transport DanGE';
       const notificationOptions = {
         body: payload.notification.body,
-        icon: '/logo192.png', // ✅ Nom corrigé
-        badge: '/logo192.png', // ✅ Nom corrigé
-        vibrate: [1000, 500, 1000, 500, 1000], // ✅ Vibration plus longue
-        requireInteraction: true, // ✅ La notification reste visible
-        tag: 'mission-' + Date.now(), // ✅ Tag unique
+        icon: '/logo192.png',
+        badge: '/logo192.png',
+        vibrate: [1000, 500, 1000, 500, 1000],
+        requireInteraction: true,
+        tag: 'mission-' + Date.now(),
         data: payload.data,
       };
-
-      if (Notification. permission === 'granted') {
+      
+      if (Notification.permission === 'granted') {
         new Notification(notificationTitle, notificationOptions);
       }
     }
-
+    
     callback(payload);
   });
 };
 
-// ✅ EXPORTER LA FONCTION playNotificationSound POUR LES TESTS
 export { playNotificationSound };
 
 export default {
@@ -158,5 +147,5 @@ export default {
   requestNotificationPermission,
   getFCMToken,
   onMessageListener,
-  playNotificationSound, // ✅ Ajouté
+  playNotificationSound,
 };
