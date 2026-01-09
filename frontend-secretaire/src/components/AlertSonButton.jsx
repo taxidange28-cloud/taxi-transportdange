@@ -11,6 +11,13 @@ function AlertSonButton() {
     try {
       const token = localStorage.getItem('token');
       
+      // Vérifier si le token existe
+      if (!token) {
+        throw new Error('Token manquant - Veuillez vous reconnecter');
+      }
+
+      console.log('Envoi de la notification...'); // Pour debug
+      
       const response = await fetch('https://transport-dange-backend.onrender.com/api/notifications/send-all', {
         method: 'POST',
         headers: {
@@ -28,18 +35,28 @@ function AlertSonButton() {
         })
       });
 
+      console.log('Status:', response.status); // Pour debug
+
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'envoi');
+        // Récupérer le message d'erreur du serveur
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || errorData.error || `Erreur ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      setMessage(`✅ Son envoyé à ${result.successCount} chauffeur(s)`);
+      console.log('Résultat:', result); // Pour debug
+      
+      setMessage(`✅ Son envoyé à ${result.successCount || 0} chauffeur(s)`);
       
       setTimeout(() => setMessage(''), 3000);
       
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur complète:', error);
       setMessage(`❌ ${error.message}`);
+      
+      // Garder le message d'erreur plus longtemps
+      setTimeout(() => setMessage(''), 5000);
     } finally {
       setLoading(false);
     }
@@ -78,7 +95,9 @@ function AlertSonButton() {
           fontSize: '13px',
           backgroundColor: message.startsWith('✅') ? '#d4edda' : '#f8d7da',
           color: message.startsWith('✅') ? '#155724' : '#721c24',
-          border: `1px solid ${message.startsWith('✅') ? '#c3e6cb' : '#f5c6cb'}`
+          border: `1px solid ${message.startsWith('✅') ? '#c3e6cb' : '#f5c6cb'}`,
+          maxWidth: '300px',
+          wordWrap: 'break-word'
         }}>
           {message}
         </p>
