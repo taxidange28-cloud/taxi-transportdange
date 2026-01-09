@@ -11,6 +11,7 @@ import Header from '../components/Header';
 import Planning from '../components/Planning';
 import FormulaireMission from '../components/FormulaireMission';
 import PopupDetails from '../components/PopupDetails';
+import AlertSonButton from '../components/AlertSonButton';
 import { getMissions, getChauffeurs, exportExcel } from '../services/api';
 import socketService from '../services/socket';
 import { format } from 'date-fns';
@@ -204,14 +205,18 @@ function Dashboard() {
             ➕ Nouvelle Mission
           </Button>
           
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleExport}
-          >
-            📊 Export Excel
-          </Button>
-        </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={handleExport}
+        >
+          📊 Export Excel
+        </Button>
+        
+        <AlertSonButton />
+      </Box>
+    </Box>
 
         <Planning
           missions={missions}
