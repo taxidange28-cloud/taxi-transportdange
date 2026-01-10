@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import StatCards from './StatCards';
-import MissionsEnAttente from './MissionsEnAttente';
-import MissionsEnCours from './MissionsEnCours';
+import MissionsModal from './MissionsModal';
+import {
+  filterMissionsEnAttente,
+  filterMissionsEnCours,
+  countMissionsByStatus,
+} from '../../utils/missionHelpers';
 
 /**
  * Composant principal du Dashboard Overview
- * Affiche les statistiques et les missions en attente/en cours
+ * Affiche les statistiques cliquables
  */
-function DashboardOverview({ missions, chauffeurs, onMissionClick, onEnvoyer, loading }) {
+function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null);
+
   // Spinner pendant le chargement
   if (loading) {
     return (
@@ -18,23 +25,79 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, onEnvoyer, lo
     );
   }
 
+  // Gestion du clic sur un StatCard
+  const handleStatCardClick = (type) => {
+    setModalType(type);
+    setModalOpen(true);
+  };
+
+  // Fermer le modal
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setModalType(null);
+  };
+
+  // Obtenir les missions filtrées selon le type
+  const getFilteredMissions = () => {
+    switch (modalType) {
+      case 'brouillon':
+        return filterMissionsEnAttente(missions);
+      case 'en_cours':
+        return filterMissionsEnCours(missions);
+      case 'terminee':
+        return missions.filter(m => m.statut === 'terminee');
+      default:
+        return [];
+    }
+  };
+
+  // Obtenir les infos du modal selon le type
+  const getModalInfo = () => {
+    switch (modalType) {
+      case 'brouillon':
+        return {
+          title: 'Missions en attente',
+          color: '#FF9800',
+          icon: '🟠',
+        };
+      case 'en_cours':
+        return {
+          title: 'Missions en cours',
+          color: '#FFC107',
+          icon: '🟡',
+        };
+      case 'terminee':
+        return {
+          title: 'Missions terminées',
+          color: '#4CAF50',
+          icon: '🟢',
+        };
+      default:
+        return {
+          title: '',
+          color: '#000',
+          icon: '',
+        };
+    }
+  };
+
+  const modalInfo = getModalInfo();
+  const filteredMissions = getFilteredMissions();
+
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Statistiques */}
-      <StatCards missions={missions} />
+      {/* Statistiques cliquables */}
+      <StatCards missions={missions} onStatCardClick={handleStatCardClick} />
 
-      {/* Missions en attente */}
-      <MissionsEnAttente
-        missions={missions}
+      {/* Modal avec liste des missions */}
+      <MissionsModal
+        open={modalOpen}
+        onClose={handleCloseModal}
+        missions={filteredMissions}
         chauffeurs={chauffeurs}
-        onMissionClick={onMissionClick}
-        onEnvoyer={onEnvoyer}
-      />
-
-      {/* Missions en cours */}
-      <MissionsEnCours
-        missions={missions}
-        chauffeurs={chauffeurs}
+        title={modalInfo.title}
+        color={modalInfo.color}
+        icon={modalInfo.icon}
         onMissionClick={onMissionClick}
       />
     </Box>
