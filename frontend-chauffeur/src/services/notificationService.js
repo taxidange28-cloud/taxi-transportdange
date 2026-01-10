@@ -1,110 +1,168 @@
+import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { enregistrerFcmToken } from './api';
+
+// Configuration Firebase
+const firebaseConfig = {
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+};
+
+let app;
+let messaging;
+
+// Initialiser Firebase
+export const initializeFirebase = () => {
+  try {
+    if (!app) {
+      app = initializeApp(firebaseConfig);
+      messaging = getMessaging(app);
+      console.log('✅ Firebase initialisé');
+    }
+    return { app, messaging };
+  } catch (error) {
+    console.error('❌ Erreur initialisation Firebase:', error);
+    return { app: null, messaging: null };
+  }
+};
+
+// Demander la permission de notification
+export const requestNotificationPermission = async () => {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('✅ Permission de notification accordée');
+      return true;
+    } else {
+      console.log('❌ Permission de notification refusée');
+      return false;
+    }
+  } catch (error) {
+    console.error('Erreur demande permission:', error);
+    return false;
+  }
+};
+
+// Obtenir le token FCM et l'enregistrer en BDD
+export const getFCMToken = async (chauffeurId) => {
+  try {
+    const { messaging } = initializeFirebase();
+    if (!messaging) {
+      console.warn('Firebase Messaging non disponible');
+      return null;
+    }
+
+    const hasPermission = await requestNotificationPermission();
+    if (!hasPermission) {
+      return null;
+    }
+
+    // ✅ ATTENDRE que le service worker soit actif
+    console.log('⏳ Attente du service worker...');
+    const registration = await navigator.serviceWorker.ready;
+    console.log('✅ Service Worker prêt:', registration.active);
+
+    // ✅ Petit délai pour s'assurer que tout est prêt
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const currentToken = await getToken(messaging, {
+      vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    });
+
+    if (currentToken) {
+      console.log('✅ Token FCM obtenu:', currentToken);
+      
+      // Enregistrer le token en base de données
+      await enregistrerFcmToken(chauffeurId, currentToken);
+      console.log('✅ Token FCM enregistré en BDD');
+      
+      return currentToken;
+    } else {
+      console.log('❌ Aucun token FCM disponible');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Erreur obtention token FCM:', error);
+    return null;
+  }
+};
 
 // Jouer le son de notification (3 fois)
-export const playNotificationSound = async () => {
+export const playNotificationSound = () => {
   try {
-    console.log('🔊 Tentative de lecture du son...');
+    console.log('🔊 Lecture du son...');
     
-    const audio = new Audio('/notification-sound.mp3'); // Corrigé : espace dans le chemin
+    const audio = new Audio('/notification-sound.mp3');
     audio.volume = 1.0;
     
     let playCount = 0;
-    const maxPlays = 3; // Nombre maximum de répétitions
-
+    const maxPlays = 3;
+    
     const playNext = () => {
       if (playCount < maxPlays) {
-        audio.currentTime = 0; // Remet à 0 pour rejouer le son
-        audio
-          .play() // Corrigé : espace avant `.play`
+        audio.currentTime = 0;
+        audio.play()
           .then(() => {
             console.log(`✅ Son joué ${playCount + 1}/${maxPlays}`);
             playCount++;
           })
-          .catch((err) => {
-            console.error('❌ Erreur lecture audio:', err);
-          });
+          .catch(err => console.error('❌ Erreur son:', err));
       }
     };
-
-    // Écouteur d'événement pour rejouer le son lorsqu'il s'est terminé
+    
     audio.addEventListener('ended', playNext);
-    audio.addEventListener('error', (e) => {
-      console.error('❌ Erreur chargement audio:', e);
-    });
-
-    // Jouer la première instance du son
+    audio.addEventListener('error', (e) => console.error('❌ Erreur audio:', e));
+    
     playNext();
-
   } catch (error) {
     console.error('❌ Erreur son:', error);
   }
 };
 
-// Initialiser les notifications Firebase
-export const initializeNotifications = (app) => {
-  const messaging = getMessaging(app); // Récupérer le service de messagerie de Firebase
-  
-  // Écouter les messages quand l'app est ouverte
-  onMessage(messaging, (payload) => {
-    console.log('📩 Message reçu (app ouverte):', payload);
+// Écouter les messages en temps réel (quand l'app est ouverte)
+export const onMessageListener = (callback) => {
+  const { messaging } = initializeFirebase();
+  if (!messaging) {
+    return () => {};
+  }
 
-    // ✅ JOUER LE SON
+  return onMessage(messaging, (payload) => {
+    console.log('📩 Message reçu:', payload);
+    
+    // Jouer le son
     playNotificationSound();
-
-    // ✅ AFFICHER LA NOTIFICATION
-    if (Notification.permission === 'granted') {
-      const notificationTitle = payload.notification?.title || '🚖 Nouvelle Mission';
+    
+    // Afficher la notification
+    if (payload.notification) {
+      const notificationTitle = payload.notification.title || '🚖 Transport DanGE';
       const notificationOptions = {
-        body: payload.notification?.body || 'Une nouvelle mission vous attend',
+        body: payload.notification.body,
         icon: '/logo192.png',
         badge: '/logo192.png',
-        tag: 'mission-' + Date.now(), // Unique tag basé sur l'heure
-        requireInteraction: true, // Garde la notification visible tant qu'elle n'est pas cliquée
-        vibrate: [1000, 500, 1000], // vibration sur appareils compatibles
-        data: payload.data || {},
-        actions: [
-          { action: 'view', title: '✅ VOIR' },
-          { action: 'dismiss', title: '❌ REFUSER' }
-        ]
+        vibrate: [1000, 500, 1000, 500, 1000],
+        requireInteraction: true,
+        tag: 'mission-' + Date.now(),
+        data: payload.data,
       };
-
-      // Créer et afficher la notification
-      new Notification(notificationTitle, notificationOptions);
+      
+      if (Notification.permission === 'granted') {
+        new Notification(notificationTitle, notificationOptions);
+      }
     }
+    
+    callback(payload);
   });
-
-  return messaging; // Retourne l'instance de messagerie
 };
 
-// Demander la permission et obtenir le token
-export const requestNotificationPermission = async (messaging) => {
-  try {
-    console.log('🔔 Demande de permission...');
-    
-    // Demande à l'utilisateur la permission d'afficher les notifications
-    const permission = await Notification.requestPermission(); // Corrigé : espace avant `.requestPermission`
-    
-    if (permission === 'granted') {
-      console.log('✅ Permission accordée');
-
-      // Obtenir le token de notification Firebase
-      const token = await getToken(messaging, {
-        vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY // VAPID key spécifiée dans .env
-      });
-
-      if (token) {
-        console.log('✅ Token FCM:', token);
-        return token; // Retourne le token
-      } else {
-        console.error('❌ Aucun token disponible');
-        return null;
-      }
-    } else {
-      console.warn('⚠️ Permission refusée');
-      return null; // Permission refusée
-    }
-  } catch (error) {
-    console.error('❌ Erreur permission:', error);
-    return null;
-  }
+export default {
+  initializeFirebase,
+  requestNotificationPermission,
+  getFCMToken,
+  onMessageListener,
+  playNotificationSound,
 };
