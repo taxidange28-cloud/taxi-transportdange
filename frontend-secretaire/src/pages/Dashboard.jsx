@@ -13,7 +13,7 @@ import Planning from '../components/Planning';
 import FormulaireMission from '../components/FormulaireMission';
 import PopupDetails from '../components/PopupDetails';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
-import { getMissions, getChauffeurs, exportExcel, envoyerMission } from '../services/api';
+import { getMissions, getChauffeurs, exportExcel } from '../services/api';
 import socketService from '../services/socket';
 import { format } from 'date-fns';
 
@@ -166,17 +166,6 @@ function Dashboard() {
     setEditMode(false);
   };
 
-  const handleEnvoyerMission = async (missionId) => {
-    try {
-      await envoyerMission(missionId);
-      loadMissions();
-      showSnackbar('Mission envoyée avec succès', 'success');
-    } catch (error) {
-      console.error('Erreur envoi mission:', error);
-      showSnackbar('Erreur lors de l\'envoi de la mission', 'error');
-    }
-  };
-
   const handleExport = async () => {
     try {
       const response = await exportExcel(filters.date_debut, filters.date_fin);
@@ -211,7 +200,6 @@ function Dashboard() {
           missions={missions}
           chauffeurs={chauffeurs}
           onMissionClick={handleOpenDetails}
-          onEnvoyer={handleEnvoyerMission}
           loading={loading}
         />
 
