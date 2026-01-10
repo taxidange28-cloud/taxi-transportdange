@@ -5,9 +5,8 @@ import { countMissionsByStatus, countMissionsEnCours } from '../../utils/mission
 
 /**
  * Conteneur des 3 cartes de statistiques
- * Calcule et affiche les compteurs
  */
-function StatCards({ missions }) {
+function StatCards({ missions, onStatCardClick }) {
   // Calcul des statistiques
   const enAttente = countMissionsByStatus(missions, 'brouillon');
   const enCours = countMissionsEnCours(missions);
@@ -34,6 +33,7 @@ function StatCards({ missions }) {
             count={enAttente}
             color="#FF9800"
             icon="🟠"
+            onClick={() => onStatCardClick('brouillon')}
           />
         </Grid>
 
@@ -44,6 +44,7 @@ function StatCards({ missions }) {
             count={enCours}
             color="#FFC107"
             icon="🟡"
+            onClick={() => onStatCardClick('en_cours')}
           />
         </Grid>
 
@@ -54,6 +55,7 @@ function StatCards({ missions }) {
             count={terminees}
             color="#4CAF50"
             icon="🟢"
+            onClick={() => onStatCardClick('terminee')}
           />
         </Grid>
       </Grid>
