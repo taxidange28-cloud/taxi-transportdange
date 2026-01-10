@@ -12,7 +12,7 @@ import Header from '../components/Header';
 import ListeMissions from '../components/ListeMissions';
 import { getMissionsChauffeur } from '../services/api';
 import socketService from '../services/socket';
-import { onMessageListener } from '../services/notifications';
+import { onMessageListener, playNotificationSound } from '../services/notifications';
 import { format, addDays } from 'date-fns';
 
 function Missions() {
@@ -57,19 +57,24 @@ function Missions() {
       }
 
       const index = prev.findIndex((m) => m.id === mission.id);
+      
+      // ✅ C'EST UNE NOUVELLE MISSION → JOUER LE SON !
+      if (index < 0 && mission.statut !== 'brouillon') {
+        playNotificationSound(); // 🔊 SON 3X
+        showSnackbar('🚨 Nouvelle mission reçue !', 'success');
+        return [mission, ...prev];
+      }
+      
+      // Mission existante → juste update
       if (index >= 0) {
         const newMissions = [...prev];
         newMissions[index] = mission;
+        showSnackbar('Mission mise à jour', 'info');
         return newMissions;
       }
       
-      if (mission.statut !== 'brouillon') {
-        return [mission, ...prev];
-      }
       return prev;
     });
-
-    showSnackbar('Mission mise à jour', 'info');
   }, [showSnackbar]);
 
   const handleMissionsUpdate = useCallback(() => {
@@ -89,7 +94,7 @@ function Missions() {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
     
-    if (! userData || userData.role !== 'chauffeur') {
+    if (!userData || userData.role !== 'chauffeur') {
       navigate('/login');
       return;
     }
@@ -103,7 +108,7 @@ function Missions() {
     if (!user || listenersSetup.current) return;
 
     // Socket listeners
-    socketService.on('mission: nouvelle', handleMissionUpdate);
+    socketService.on('mission:nouvelle', handleMissionUpdate); // ✅ CORRIGÉ : sans espace
     socketService.on('mission:envoyee', handleMissionUpdate);
     socketService.on('missions:envoyees', handleMissionsUpdate);
     socketService.on('mission:modifiee', handleMissionUpdate);
@@ -118,19 +123,19 @@ function Missions() {
         loadMissions(userFromStorage.id);
       }
 
-      const title = payload.notification?. title || 'Nouvelle notification';
+      const title = payload.notification?.title || 'Nouvelle notification';
       const body = payload.notification?.body || '';
       showSnackbar(`${title}: ${body}`, 'info');
     });
 
-    listenersSetup. current = true;
+    listenersSetup.current = true;
 
     // Cleanup
     return () => {
       socketService.off('mission:nouvelle', handleMissionUpdate);
       socketService.off('mission:envoyee', handleMissionUpdate);
       socketService.off('missions:envoyees', handleMissionsUpdate);
-      socketService. off('mission:modifiee', handleMissionUpdate);
+      socketService.off('mission:modifiee', handleMissionUpdate);
       socketService.off('mission:supprimee', handleMissionDelete);
     };
   }, [user, handleMissionUpdate, handleMissionsUpdate, handleMissionDelete, loadMissions, showSnackbar]);
@@ -142,7 +147,7 @@ function Missions() {
   }, [user, loadMissions]);
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ... snackbar, open: false });
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const handleLogout = () => {
@@ -154,7 +159,7 @@ function Missions() {
 
   if (loading) {
     return (
-      <Box sx={{ display:  'flex', justifyContent:  'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
       </Box>
     );
