@@ -64,8 +64,8 @@ export const terminerMission = (missionId) =>
 export const ajouterCommentaire = (missionId, commentaire) => 
   api.post(`/missions/${missionId}/commentaire`, { commentaire });
 
-// Chauffeurs
+// Chauffeurs - Enregistrement token FCM
 export const enregistrerFcmToken = (chauffeurId, fcmToken) => 
-  api.post(`/chauffeurs/${chauffeurId}/fcm-token`, { fcm_token: fcmToken });
+  api.post(`/chauffeurs/${chauffeurId}/fcm-token`, { fcmToken });
 
 export default api;
