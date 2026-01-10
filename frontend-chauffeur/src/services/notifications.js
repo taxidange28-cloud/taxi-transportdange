@@ -61,21 +61,20 @@ export const getFCMToken = async (chauffeurId) => {
       return null;
     }
 
-    // ✅ ATTENDRE que le service worker soit actif
-    console.log('⏳ Attente du service worker...');
-    const registration = await navigator.serviceWorker.ready;
-    console.log('✅ Service Worker prêt:', registration.active);
-
-    // ✅ Petit délai pour s'assurer que tout est prêt
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const currentToken = await getToken(messaging, {
-      vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    });
+    // ✅ Obtenir le token avec timeout de sécurité (10 secondes max)
+    console.log('⏳ Obtention du token FCM...');
+    
+    const currentToken = await Promise.race([
+      getToken(messaging, {
+        vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY,
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: Impossible d\'obtenir le token FCM après 10 secondes')), 10000)
+      )
+    ]);
 
     if (currentToken) {
-      console.log('✅ Token FCM obtenu:', currentToken);
+      console.log('✅ Token FCM obtenu:', currentToken.substring(0, 30) + '...');
       
       // Enregistrer le token en base de données
       await enregistrerFcmToken(chauffeurId, currentToken);
