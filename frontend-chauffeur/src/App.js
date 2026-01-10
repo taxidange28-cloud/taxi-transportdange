@@ -84,8 +84,7 @@ const PrivateRoute = ({ children }) => {
 };
 
 function App() {
-  const [soundTestVisible, setSoundTestVisible] = useState(false);
-
+  
   useEffect(() => {
     console.log('🚀 Application Transport DanGE initialisée');
     
@@ -98,17 +97,10 @@ function App() {
         }
       });
     }
-
-    // Afficher le bouton de test du son en mode développement
-    setSoundTestVisible(true);
-  
+    
   }, []);
 
-  const handleTestSound = () => {
-    console.log('🔊 Test du son déclenché');
-    playNotificationSound();
-  };
-
+  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -126,44 +118,7 @@ function App() {
           <Route path="/" element={<Navigate to="/missions" replace />} />
         </Routes>
       </BrowserRouter>
-
-      {/* Bouton de test du son (flottant en bas à droite) */}
-      {soundTestVisible && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            zIndex: 9999,
-          }}
-        >
-          <button
-            onClick={handleTestSound}
-            style={{
-              padding: '15px 25px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-              transition: 'all 0.3s',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#45a049';
-              e.target.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = '#4CAF50';
-              e.target.style.transform = 'scale(1)';
-            }}
-          >
-            🔊 Test Son
-          </button>
-        </div>
-      )}
+      
     </ThemeProvider>
   );
 }
