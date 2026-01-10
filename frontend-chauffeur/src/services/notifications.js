@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { enregistrerFcmToken } from './api';
 
+// Configuration Firebase
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -14,6 +15,7 @@ const firebaseConfig = {
 let app;
 let messaging;
 
+// Initialiser Firebase
 export const initializeFirebase = () => {
   try {
     if (!app) {
@@ -28,6 +30,7 @@ export const initializeFirebase = () => {
   }
 };
 
+// Demander la permission de notification
 export const requestNotificationPermission = async () => {
   try {
     const permission = await Notification.requestPermission();
@@ -44,6 +47,7 @@ export const requestNotificationPermission = async () => {
   }
 };
 
+// Obtenir le token FCM et l'enregistrer en BDD
 export const getFCMToken = async (chauffeurId) => {
   try {
     const { messaging } = initializeFirebase();
@@ -57,14 +61,25 @@ export const getFCMToken = async (chauffeurId) => {
       return null;
     }
 
+    // ✅ ATTENDRE que le service worker soit actif
+    console.log('⏳ Attente du service worker...');
+    const registration = await navigator.serviceWorker.ready;
+    console.log('✅ Service Worker prêt:', registration.active);
+
+    // ✅ Petit délai pour s'assurer que tout est prêt
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     const currentToken = await getToken(messaging, {
       vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY,
+      serviceWorkerRegistration: registration,
     });
 
     if (currentToken) {
       console.log('✅ Token FCM obtenu:', currentToken);
       
+      // Enregistrer le token en base de données
       await enregistrerFcmToken(chauffeurId, currentToken);
+      console.log('✅ Token FCM enregistré en BDD');
       
       return currentToken;
     } else {
@@ -72,12 +87,13 @@ export const getFCMToken = async (chauffeurId) => {
       return null;
     }
   } catch (error) {
-    console.error('Erreur obtention token FCM:', error);
+    console.error('❌ Erreur obtention token FCM:', error);
     return null;
   }
 };
 
-const playNotificationSound = () => {
+// Jouer le son de notification (3 fois)
+export const playNotificationSound = () => {
   try {
     console.log('🔊 Lecture du son...');
     
@@ -108,6 +124,7 @@ const playNotificationSound = () => {
   }
 };
 
+// Écouter les messages en temps réel (quand l'app est ouverte)
 export const onMessageListener = (callback) => {
   const { messaging } = initializeFirebase();
   if (!messaging) {
@@ -117,8 +134,10 @@ export const onMessageListener = (callback) => {
   return onMessage(messaging, (payload) => {
     console.log('📩 Message reçu:', payload);
     
+    // Jouer le son
     playNotificationSound();
     
+    // Afficher la notification
     if (payload.notification) {
       const notificationTitle = payload.notification.title || '🚖 Transport DanGE';
       const notificationOptions = {
@@ -139,8 +158,6 @@ export const onMessageListener = (callback) => {
     callback(payload);
   });
 };
-
-export { playNotificationSound };
 
 export default {
   initializeFirebase,
