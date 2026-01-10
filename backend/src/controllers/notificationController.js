@@ -5,27 +5,27 @@ exports.sendNotificationToDriver = async (req, res) => {
   try {
     const { driverId, title, body, data } = req.body;
 
-    console.log('📤 Envoi de notification au chauffeur:', driverId);
+    console.log('📤 Envoi notification au chauffeur:', driverId);
 
-    // Récupération des informations du chauffeur
+    // CORRECTION : Requête sur la table CHAUFFEURS
     const result = await pool.query(
-      'SELECT id, nom, fcm_token FROM chauffeurs WHERE id = $1',
+      'SELECT id, nom, username, fcm_token FROM chauffeurs WHERE id = $1 AND actif = TRUE',
       [driverId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
+      return res.status(404).json({ 
         success: false,
-        message: 'Chauffeur non trouvé',
+        message: 'Chauffeur non trouvé' 
       });
     }
 
     const driver = result.rows[0];
 
     if (!driver.fcm_token) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
-        message: 'Token FCM manquant pour ce chauffeur',
+        message: 'Token FCM manquant pour ce chauffeur' 
       });
     }
 
@@ -33,54 +33,54 @@ exports.sendNotificationToDriver = async (req, res) => {
       token: driver.fcm_token,
       notification: {
         title: title || '🚖 Nouvelle Mission',
-        body: body || 'Une nouvelle mission vous attend',
+        body: body || 'Une nouvelle mission vous attend'
       },
       data: {
         ...data,
-        click_action: '/missions',
+        click_action: '/missions'
       },
       webpush: {
         headers: {
           Urgency: 'high',
-          TTL: '0',
+          TTL: '0'
         },
         notification: {
           requireInteraction: true,
           vibrate: [1000, 500, 1000],
           icon: '/logo192.png',
           badge: '/logo192.png',
-          tag: `mission-${Date.now()}`,
+          tag: 'mission-' + Date.now()
         },
         fcmOptions: {
-          link: '/missions',
-        },
-      },
+          link: '/missions'
+        }
+      }
     };
 
     const messaging = getMessaging();
-
+    
     if (!messaging) {
       return res.status(500).json({
         success: false,
-        message: 'Firebase Messaging non initialisé',
+        message: 'Firebase Messaging non initialisé'
       });
     }
 
     const response = await messaging.send(message);
-
+    
     console.log('✅ Notification envoyée avec succès:', response);
-
-    return res.status(200).json({
-      success: true,
+    
+    res.status(200).json({ 
+      success: true, 
       message: 'Notification envoyée avec succès',
-      messageId: response,
+      messageId: response
     });
   } catch (error) {
-    console.error('❌ Erreur lors de l\'envoi de la notification:', error);
-    return res.status(500).json({
-      success: false,
+    console.error('❌ Erreur envoi notification:', error);
+    res.status(500).json({ 
+      success: false, 
       message: 'Erreur lors de l\'envoi de la notification',
-      error: error.message,
+      error: error.message 
     });
   }
 };
@@ -89,78 +89,84 @@ exports.sendNotificationToAllDrivers = async (req, res) => {
   try {
     const { title, body, data } = req.body;
 
-    console.log('📤 Envoi de notifications à tous les chauffeurs.');
+    console.log('📤 Envoi notification à tous les chauffeurs');
 
-    // Récupération des chauffeurs actifs avec un token FCM
+    // CORRECTION : Requête sur la table CHAUFFEURS
     const result = await pool.query(
-      'SELECT id, nom, fcm_token FROM chauffeurs WHERE fcm_token IS NOT NULL AND actif = TRUE'
+      'SELECT id, nom, username, fcm_token FROM chauffeurs WHERE actif = TRUE AND fcm_token IS NOT NULL'
     );
 
+    console.log(`✅ ${result.rows.length} chauffeurs actifs trouvés avec token FCM`);
+
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Aucun chauffeur avec un token FCM trouvé.',
+      return res.status(200).json({
+        success: true,
+        message: 'Aucun chauffeur avec token FCM trouvé',
+        successCount: 0,
+        failureCount: 0
       });
     }
 
-    console.log(`📊 ${result.rows.length} chauffeur(s) trouvé(s) avec des tokens FCM.`);
-
-    const tokens = result.rows.map(driver => driver.fcm_token).filter(token => token);
+    const tokens = result.rows.map(driver => driver.fcm_token).filter(t => t);
 
     if (tokens.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Aucun token FCM valide trouvé.',
+      return res.status(200).json({
+        success: true,
+        message: 'Aucun token FCM valide trouvé',
+        successCount: 0,
+        failureCount: 0
       });
     }
+
+    console.log(`📲 Envoi vers ${tokens.length} token(s)`);
 
     const message = {
       notification: {
-        title: title || '🔔 Transport DanGE',
-        body: body || 'Alerte sonore',
+        title: title || '🚖 Transport DanGE',
+        body: body || 'Nouvelle notification'
       },
       data: {
-        type: 'sound_alert',
         ...data,
-        click_action: '/missions',
+        click_action: '/missions'
       },
-      tokens: tokens,
+      tokens: tokens
     };
 
     const messaging = getMessaging();
-
+    
     if (!messaging) {
       return res.status(500).json({
         success: false,
-        message: 'Firebase Messaging non initialisé.',
+        message: 'Firebase Messaging non initialisé'
       });
     }
 
     const response = await messaging.sendEachForMulticast(message);
-
-    console.log(`✅ Notifications envoyées: ${response.successCount}/${tokens.length}.`);
-
+    
+    console.log(`✅ Notifications envoyées: ${response.successCount}/${tokens.length}`);
+    
     if (response.failureCount > 0) {
-      console.warn(`⚠️ ${response.failureCount} notification(s) ont échoué.`);
+      console.warn(`⚠️ ${response.failureCount} notifications ont échoué`);
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
-          console.error(`❌ Erreur pour le token ${idx}:`, resp.error);
+          console.error(`❌ Token ${idx} error:`, resp.error);
         }
       });
     }
-
-    return res.status(200).json({
+    
+    res.status(200).json({
       success: true,
-      message: `${response.successCount} notifications envoyées sur ${tokens.length}.`,
+      message: `${response.successCount} notifications envoyées sur ${tokens.length}`,
       successCount: response.successCount,
-      failureCount: response.failureCount,
+      failureCount: response.failureCount
     });
   } catch (error) {
-    console.error('❌ Erreur lors de l\'envoi des notifications:', error);
-    return res.status(500).json({
+    console.error('❌ Erreur envoi notifications:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({
       success: false,
-      message: 'Erreur lors de l\'envoi des notifications.',
-      error: error.message,
+      message: 'Erreur lors de l\'envoi des notifications',
+      error: error.message
     });
   }
 };
