@@ -5,16 +5,17 @@ import {
   Button,
   Alert,
   Snackbar,
+  Divider,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Planning from '../components/Planning';
 import FormulaireMission from '../components/FormulaireMission';
 import PopupDetails from '../components/PopupDetails';
-import { getMissions, getChauffeurs, exportExcel } from '../services/api';
+import DashboardOverview from '../components/dashboard/DashboardOverview';
+import { getMissions, getChauffeurs, exportExcel, envoyerMission } from '../services/api';
 import socketService from '../services/socket';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -165,6 +166,17 @@ function Dashboard() {
     setEditMode(false);
   };
 
+  const handleEnvoyerMission = async (missionId) => {
+    try {
+      await envoyerMission(missionId);
+      loadMissions();
+      showSnackbar('Mission envoyée avec succès', 'success');
+    } catch (error) {
+      console.error('Erreur envoi mission:', error);
+      showSnackbar('Erreur lors de l\'envoi de la mission', 'error');
+    }
+  };
+
   const handleExport = async () => {
     try {
       const response = await exportExcel(filters.date_debut, filters.date_fin);
@@ -194,6 +206,19 @@ function Dashboard() {
       <Header onLogout={handleLogout} />
       
       <Container maxWidth="xl" sx={{ py: 3 }}>
+        {/* ========== NOUVEAU DASHBOARD ========== */}
+        <DashboardOverview
+          missions={missions}
+          chauffeurs={chauffeurs}
+          onMissionClick={handleOpenDetails}
+          onEnvoyer={handleEnvoyerMission}
+          loading={loading}
+        />
+
+        {/* ========== SÉPARATEUR ========== */}
+        <Divider sx={{ my: 4 }} />
+
+        {/* ========== PLANNING EXISTANT (INCHANGÉ) ========== */}
         <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
           <Button
             variant="contained"
