@@ -2,19 +2,20 @@ import React from 'react';
 import { Card, CardContent, Typography, Box } from '@mui/material';
 
 /**
- * Carte de statistique individuelle (réutilisable)
- * Affiche un compteur avec icône et label
+ * Carte de statistique individuelle cliquable
  */
-function StatCard({ title, count, color, icon }) {
+function StatCard({ title, count, color, icon, onClick }) {
   return (
     <Card
+      onClick={onClick}
       sx={{
         background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
         borderLeft: `4px solid ${color}`,
         transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: 'pointer',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: 4,
+          boxShadow: 6,
         },
       }}
     >
@@ -51,6 +52,19 @@ function StatCard({ title, count, color, icon }) {
           }}
         >
           {title}
+        </Typography>
+
+        {/* Indication cliquable */}
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.disabled',
+            fontSize: '0.7rem',
+            mt: 1,
+            display: 'block',
+          }}
+        >
+          Cliquer pour voir le détail
         </Typography>
       </CardContent>
     </Card>
