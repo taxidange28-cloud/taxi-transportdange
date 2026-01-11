@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import Planning from '../components/Planning';
+import PlanningTabs from '../components/planning/PlanningTabs';
 import FormulaireMission from '../components/FormulaireMission';
 import PopupDetails from '../components/PopupDetails';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
@@ -32,12 +32,10 @@ function Dashboard() {
     date_fin: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
   });
 
-  // Afficher une notification
   const showSnackbar = useCallback((message, severity = 'info') => {
     setSnackbar({ open: true, message, severity });
   }, []);
 
-  // Charger les missions depuis l'API
   const loadMissions = useCallback(async () => {
     try {
       const response = await getMissions(filters);
@@ -47,7 +45,6 @@ function Dashboard() {
     }
   }, [filters]);
 
-  // Mettre à jour une mission via WebSocket
   const handleMissionUpdate = useCallback((mission) => {
     setMissions((prev) => {
       const index = prev.findIndex((m) => m.id === mission.id);
@@ -60,20 +57,18 @@ function Dashboard() {
     });
 
     setSelectedMission((prev) => {
-      if (prev?. id === mission.id) {
+      if (prev?.id === mission.id) {
         return mission;
       }
       return prev;
     });
   }, []);
 
-  // Gérer l'envoi multiple de missions
   const handleMissionsUpdate = useCallback((updatedMissions) => {
     loadMissions();
     showSnackbar(`${updatedMissions.length} mission(s) envoyée(s)`, 'success');
   }, [loadMissions, showSnackbar]);
 
-  // Supprimer une mission
   const handleMissionDelete = useCallback((data) => {
     setMissions((prev) => prev.filter((m) => m.id !== data.id));
     setSelectedMission((prev) => {
@@ -85,7 +80,6 @@ function Dashboard() {
     });
   }, []);
 
-  // Configurer les listeners WebSocket
   const setupSocketListeners = useCallback(() => {
     socketService.on('mission:nouvelle', handleMissionUpdate);
     socketService.on('mission:envoyee', handleMissionUpdate);
@@ -98,23 +92,21 @@ function Dashboard() {
     socketService.on('mission:commentaire', handleMissionUpdate);
   }, [handleMissionUpdate, handleMissionsUpdate, handleMissionDelete]);
 
-  // Retirer les listeners WebSocket
   const removeSocketListeners = useCallback(() => {
     socketService.off('mission:nouvelle', handleMissionUpdate);
     socketService.off('mission:envoyee', handleMissionUpdate);
     socketService.off('missions:envoyees', handleMissionsUpdate);
     socketService.off('mission:modifiee', handleMissionUpdate);
     socketService.off('mission:supprimee', handleMissionDelete);
-    socketService. off('mission:confirmee', handleMissionUpdate);
+    socketService.off('mission:confirmee', handleMissionUpdate);
     socketService.off('mission:pec', handleMissionUpdate);
     socketService.off('mission:terminee', handleMissionUpdate);
     socketService.off('mission:commentaire', handleMissionUpdate);
   }, [handleMissionUpdate, handleMissionsUpdate, handleMissionDelete]);
 
-  // Initialisation :  vérifier authentification et charger données (UNE SEULE FOIS)
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || user. role !== 'secretaire') {
+    if (!user || user.role !== 'secretaire') {
       navigate('/login');
       return;
     }
@@ -141,28 +133,24 @@ function Dashboard() {
     return () => {
       removeSocketListeners();
     };
-  }, [navigate, setupSocketListeners, removeSocketListeners, showSnackbar]); // ✅ PAS filters !
+  }, [navigate, setupSocketListeners, removeSocketListeners, showSnackbar]);
 
-  // Recharger les missions quand les filtres changent
   useEffect(() => {
-    if (! loading) {
+    if (!loading) {
       loadMissions();
     }
   }, [filters, loadMissions, loading]);
 
-  // Fermer la notification
   const handleCloseSnackbar = () => {
-    setSnackbar({ ... snackbar, open: false });
+    setSnackbar({ ...snackbar, open: false });
   };
 
-  // Callback après création de mission
   const handleMissionCreated = () => {
     loadMissions();
     setOpenForm(false);
     showSnackbar('Mission créée avec succès', 'success');
   };
 
-  // Callback après modification de mission
   const handleMissionUpdated = () => {
     loadMissions();
     setOpenDetails(false);
@@ -171,7 +159,6 @@ function Dashboard() {
     showSnackbar('Mission modifiée avec succès', 'success');
   };
 
-  // Callback après suppression de mission
   const handleMissionDeleted = () => {
     loadMissions();
     setOpenDetails(false);
@@ -179,21 +166,19 @@ function Dashboard() {
     showSnackbar('Mission supprimée', 'info');
   };
 
-  // Ouvrir le popup de détails d'une mission
   const handleOpenDetails = (mission) => {
     setSelectedMission(mission);
     setOpenDetails(true);
     setEditMode(false);
   };
 
-  // Exporter les missions en Excel
   const handleExport = async () => {
     try {
-      const response = await exportExcel(filters. date_debut, filters.date_fin);
-      const url = window.URL.createObjectURL(new Blob([response. data]));
+      const response = await exportExcel(filters.date_debut, filters.date_fin);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `missions_${filters.date_debut}_${filters.date_fin}. xlsx`);
+      link.setAttribute('download', `missions_${filters.date_debut}_${filters.date_fin}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -204,9 +189,8 @@ function Dashboard() {
     }
   };
 
-  // Déconnexion
   const handleLogout = () => {
-    localStorage. removeItem('token');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     socketService.disconnect();
     navigate('/login');
@@ -217,7 +201,6 @@ function Dashboard() {
       <Header onLogout={handleLogout} />
       
       <Container maxWidth="xl" sx={{ py: 3 }}>
-        {/* Dashboard avec statistiques */}
         <DashboardOverview
           missions={missions}
           chauffeurs={chauffeurs}
@@ -225,11 +208,9 @@ function Dashboard() {
           loading={loading}
         />
 
-        {/* Séparateur visuel */}
         <Divider sx={{ my: 4 }} />
 
-        {/* Boutons d'action */}
-        <Box sx={{ mb: 3, display: 'flex', gap:  2, justifyContent: 'space-between' }}>
+        <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
           <Button
             variant="contained"
             color="primary"
@@ -248,8 +229,7 @@ function Dashboard() {
           </Button>
         </Box>
 
-        {/* Planning des missions */}
-        <Planning
+        <PlanningTabs
           missions={missions}
           chauffeurs={chauffeurs}
           loading={loading}
@@ -260,7 +240,6 @@ function Dashboard() {
         />
       </Container>
 
-      {/* Formulaire de création de mission */}
       <FormulaireMission
         open={openForm}
         onClose={() => setOpenForm(false)}
@@ -268,7 +247,6 @@ function Dashboard() {
         chauffeurs={chauffeurs}
       />
 
-      {/* Popup de détails d'une mission */}
       <PopupDetails
         open={openDetails}
         onClose={() => {
@@ -284,7 +262,6 @@ function Dashboard() {
         onDelete={handleMissionDeleted}
       />
 
-      {/* Notifications toast */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
