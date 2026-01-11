@@ -21,7 +21,7 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const server = http.createServer(app);
-
+const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
 const corsOptions = {
   origin: process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:3001',
@@ -63,6 +63,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/chauffeurs', chauffeurRoutes);
 app.use('/api/chauffeurs', chauffeurMissionsRoutes);
+app.use('/api/chauffeurs/manage', chauffeursManageRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
