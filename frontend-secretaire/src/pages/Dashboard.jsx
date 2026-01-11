@@ -87,7 +87,7 @@ function Dashboard() {
 
   // Configurer les listeners WebSocket
   const setupSocketListeners = useCallback(() => {
-    socketService.on('mission: nouvelle', handleMissionUpdate);
+    socketService.on('mission:nouvelle', handleMissionUpdate);
     socketService.on('mission:envoyee', handleMissionUpdate);
     socketService.on('missions:envoyees', handleMissionsUpdate);
     socketService.on('mission:modifiee', handleMissionUpdate);
