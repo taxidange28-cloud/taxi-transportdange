@@ -17,12 +17,14 @@ import {
   sortMissionsByDateTime,
   getChauffeurName,
   getStatusIcon,
+  formatHeureFromTimestamp,
+  calculerDuree,
 } from '../../utils/missionHelpers';
 
 /**
  * Modal affichant la liste des missions d'un statut donné
  */
-function MissionsModal({ open, onClose, missions, chauffeurs, title, color, icon, onMissionClick }) {
+function MissionsModal({ open, onClose, missions, chauffeurs, title, color, icon, onMissionClick, type }) {
   // Trier les missions
   const sortedMissions = sortMissionsByDateTime(missions);
 
@@ -61,7 +63,7 @@ function MissionsModal({ open, onClose, missions, chauffeurs, title, color, icon
             size="small"
             sx={{
               bgcolor: color,
-              color: title === 'Missions en cours' ? '#000' : '#fff',
+              color: type === 'en_cours' ? '#000' : '#fff',
               fontWeight: 'bold',
             }}
           />
@@ -90,6 +92,12 @@ function MissionsModal({ open, onClose, missions, chauffeurs, title, color, icon
                 day: 'numeric',
                 month: 'short',
               });
+
+              // Pour les missions terminées : calcul des heures et durée
+              const isTerminee = type === 'terminee';
+              const heurePEC = isTerminee ? formatHeureFromTimestamp(mission.heure_pec) : null;
+              const heureTerminee = isTerminee ? formatHeureFromTimestamp(mission.heure_depose) : null;
+              const duree = isTerminee ? calculerDuree(mission.heure_pec, mission.heure_depose) : null;
 
               return (
                 <React.Fragment key={mission.id}>
@@ -129,7 +137,7 @@ function MissionsModal({ open, onClose, missions, chauffeurs, title, color, icon
                         </Typography>
 
                         {/* Ligne 3 : Chauffeur + Type + Statut */}
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: isTerminee ? 1 : 0 }}>
                           <Typography
                             variant="body2"
                             sx={{
@@ -156,11 +164,36 @@ function MissionsModal({ open, onClose, missions, chauffeurs, title, color, icon
                                 height: '20px',
                                 fontSize: '0.7rem',
                                 bgcolor: color,
-                                color: title === 'Missions en cours' ? '#000' : '#fff',
+                                color: type === 'en_cours' ? '#000' : '#fff',
                               }}
                             />
                           )}
                         </Box>
+
+                        {/* Ligne 4 : Heures PEC et Terminée + Durée (uniquement pour missions terminées) */}
+                        {isTerminee && (
+                          <Box
+                            sx={{
+                              mt: 1,
+                              p: 1,
+                              bgcolor: '#f5f5f5',
+                              borderRadius: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 0.5,
+                            }}
+                          >
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              ⏰ <strong>PEC :</strong> {heurePEC}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              ⏰ <strong>Terminée :</strong> {heureTerminee}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'primary.main', fontWeight: 600 }}>
+                              ⏱️ <strong>Durée :</strong> {duree}
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
                     </ListItemButton>
                   </ListItem>
