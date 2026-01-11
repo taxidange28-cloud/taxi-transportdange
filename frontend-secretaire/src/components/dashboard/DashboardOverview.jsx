@@ -66,23 +66,23 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
         return {
           title: 'Missions en cours',
           color: '#FFC107',
-          icon: '🟡',
+          icon:  '🟡',
         };
-      case 'pec':
+      case 'pec': 
         return {
-          title: 'Missions en prise en charge',
+          title:  'Missions en prise en charge',
           color: '#F44336',
           icon: '🔴',
         };
-      case 'terminee':
+      case 'terminee': 
         return {
           title: 'Missions terminées',
           color: '#4CAF50',
           icon: '🟢',
         };
-      default:
+      default: 
         return {
-          title: '',
+          title:  '',
           color: '#000',
           icon: '',
         };
@@ -94,11 +94,21 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Statistiques cliquables */}
-      <StatCards missions={missions} onStatCardClick={handleStatCardClick} />
+      {/* ========== TEST :  COMPOSANTS COMMENTÉS ========== */}
+      
+      {/* Statistiques cliquables - COMMENTÉ POUR TEST */}
+      {/* <StatCards missions={missions} onStatCardClick={handleStatCardClick} /> */}
 
-      {/* Modal avec liste des missions */}
-      <MissionsModal
+      {/* Affichage de debug temporaire */}
+      <Box sx={{ p: 3, bgcolor:  '#f5f5f5', borderRadius: 2, mb: 3 }}>
+        <h3>🧪 Dashboard Overview - Mode Test</h3>
+        <p>✅ Missions chargées :  {missions.length}</p>
+        <p>✅ Chauffeurs : {chauffeurs.length}</p>
+        <p>⚠️ StatCards et MissionsModal désactivés temporairement</p>
+      </Box>
+
+      {/* Modal avec liste des missions - COMMENTÉ POUR TEST */}
+      {/* <MissionsModal
         open={modalOpen}
         onClose={handleCloseModal}
         missions={filteredMissions}
@@ -108,7 +118,7 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
         icon={modalInfo.icon}
         onMissionClick={onMissionClick}
         type={modalType}
-      />
+      /> */}
     </Box>
   );
 }
