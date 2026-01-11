@@ -12,12 +12,12 @@ export const countMissionsByStatus = (missions, status) => {
 };
 
 /**
- * Compter les missions en cours (envoyée, confirmée, prise en charge)
+ * Compter les missions en cours (envoyée, confirmée - SANS pec)
  */
 export const countMissionsEnCours = (missions) => {
   if (!Array.isArray(missions)) return 0;
   return missions.filter(m => 
-    ['envoyee', 'confirmee', 'pec'].includes(m.statut)
+    ['envoyee', 'confirmee'].includes(m.statut)
   ).length;
 };
 
@@ -30,13 +30,21 @@ export const filterMissionsEnAttente = (missions) => {
 };
 
 /**
- * Filtrer les missions en cours
+ * Filtrer les missions en cours (envoyée, confirmée - SANS pec)
  */
 export const filterMissionsEnCours = (missions) => {
   if (!Array.isArray(missions)) return [];
   return missions.filter(m => 
-    ['envoyee', 'confirmee', 'pec'].includes(m.statut)
+    ['envoyee', 'confirmee'].includes(m.statut)
   );
+};
+
+/**
+ * Filtrer les missions en prise en charge
+ */
+export const filterMissionsPEC = (missions) => {
+  if (!Array.isArray(missions)) return [];
+  return missions.filter(m => m.statut === 'pec');
 };
 
 /**
@@ -47,8 +55,8 @@ export const getStatusColor = (statut) => {
     'brouillon': '#FF9800',   // Orange
     'envoyee': '#2196F3',     // Bleu
     'confirmee': '#FFC107',   // Jaune
-    'pec': '#4CAF50',         // Vert
-    'terminee': '#9E9E9E'     // Gris
+    'pec': '#F44336',         // Rouge
+    'terminee': '#4CAF50'     // Vert
   };
   return colors[statut] || '#000000';
 };
@@ -75,8 +83,8 @@ export const getStatusIcon = (statut) => {
     'brouillon': '🟠',
     'envoyee': '🔵',
     'confirmee': '🟡',
-    'pec': '🟢',
-    'terminee': '⚫'
+    'pec': '🔴',
+    'terminee': '🟢'
   };
   return icons[statut] || '⚪';
 };
@@ -127,4 +135,52 @@ export const getChauffeurName = (mission, chauffeurs = []) => {
   
   const chauffeur = chauffeurs.find(c => c.id === mission.chauffeur_id);
   return chauffeur ? chauffeur.nom : 'Chauffeur inconnu';
+};
+
+/**
+ * Formater une heure depuis un timestamp
+ * @param {string} timestamp - ISO timestamp
+ * @returns {string} - Format HH:MM
+ */
+export const formatHeureFromTimestamp = (timestamp) => {
+  if (!timestamp) return '--:--';
+  
+  try {
+    const date = new Date(timestamp);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } catch (e) {
+    return '--:--';
+  }
+};
+
+/**
+ * Calculer la durée entre deux timestamps
+ * @param {string} debut - Timestamp de début (heure_pec)
+ * @param {string} fin - Timestamp de fin (heure_depose)
+ * @returns {string} - Format "Xh Ymin" ou "Y min"
+ */
+export const calculerDuree = (debut, fin) => {
+  if (!debut || !fin) return '--';
+  
+  try {
+    const dateDebut = new Date(debut);
+    const dateFin = new Date(fin);
+    const diffMs = dateFin - dateDebut;
+    
+    if (diffMs < 0) return '--';
+    
+    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+    const heures = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (heures > 0) {
+      return `${heures}h ${minutes}min`;
+    } else {
+      return `${minutes} min`;
+    }
+  } catch (e) {
+    return '--';
+  }
 };
