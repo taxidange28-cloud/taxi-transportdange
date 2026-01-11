@@ -1,74 +1,78 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Grid, Box, Typography } from '@mui/material';
+import StatCard from './StatCard';
+import { countMissionsByStatus, countMissionsEnCours, filterMissionsPEC } from '../../utils/missionHelpers';
 
 /**
- * Carte de statistique individuelle cliquable
+ * Conteneur des 4 cartes de statistiques
  */
-function StatCard({ title, count, color, icon, onClick }) {
+function StatCards({ missions, onStatCardClick }) {
+  // Calcul des statistiques
+  const enAttente = countMissionsByStatus(missions, 'brouillon');
+  const enCours = countMissionsEnCours(missions);
+  const pec = filterMissionsPEC(missions).length;
+  const terminees = countMissionsByStatus(missions, 'terminee');
+
   return (
-    <Card
-      onClick={onClick}
-      sx={{
-        background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
-        borderLeft: `4px solid ${color}`,
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        cursor: 'pointer',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 6,
-        },
-      }}
-    >
-      <CardContent sx={{ textAlign: 'center', py: 3 }}>
-        {/* Icône */}
-        <Typography
-          variant="h2"
-          sx={{
-            fontSize: '3rem',
-            mb: 1,
-          }}
-        >
-          {icon}
-        </Typography>
+    <Box sx={{ mb: 4 }}>
+      <Typography
+        variant="h5"
+        sx={{
+          mb: 3,
+          fontWeight: 'bold',
+          color: 'primary.main',
+        }}
+      >
+        📊 Vue d'ensemble
+      </Typography>
 
-        {/* Compteur */}
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 'bold',
-            color: color,
-            mb: 0.5,
-          }}
-        >
-          {count}
-        </Typography>
+      <Grid container spacing={3}>
+        {/* En attente */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="En attente"
+            count={enAttente}
+            color="#FF9800"
+            icon="🟠"
+            onClick={() => onStatCardClick('brouillon')}
+          />
+        </Grid>
 
-        {/* Label */}
-        <Typography
-          variant="body1"
-          sx={{
-            color: 'text.secondary',
-            fontWeight: 500,
-          }}
-        >
-          {title}
-        </Typography>
+        {/* En cours */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="En cours"
+            count={enCours}
+            color="#FFC107"
+            icon="🟡"
+            onClick={() => onStatCardClick('en_cours')}
+          />
+        </Grid>
 
-        {/* Indication cliquable */}
-        <Typography
-          variant="caption"
-          sx={{
-            color: 'text.disabled',
-            fontSize: '0.7rem',
-            mt: 1,
-            display: 'block',
-          }}
-        >
-          Cliquer pour voir le détail
-        </Typography>
-      </CardContent>
-    </Card>
+        {/* Prise en charge */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Prise en charge"
+            count={pec}
+            color="#F44336"
+            icon="🔴"
+            onClick={() => onStatCardClick('pec')}
+          />
+        </Grid>
+
+        {/* Terminées */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Terminées"
+            count={terminees}
+            color="#4CAF50"
+            icon="🟢"
+            onClick={() => onStatCardClick('terminee')}
+          />
+        </Grid>
+      </Grid>
+    </Box>
   );
 }
 
-export default StatCard;
+export default StatCards;
