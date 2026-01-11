@@ -1,16 +1,16 @@
 import React from 'react';
 import { Grid, Box, Typography } from '@mui/material';
 import StatCard from './StatCard';
-import { countMissionsByStatus, countMissionsEnCours } from '../../utils/missionHelpers';
 
 /**
- * Conteneur des 3 cartes de statistiques
+ * TEST 3 - StatCards SANS missionHelpers
  */
 function StatCards({ missions, onStatCardClick }) {
-  // Calcul des statistiques
-  const enAttente = countMissionsByStatus(missions, 'brouillon');
-  const enCours = countMissionsEnCours(missions);
-  const terminees = countMissionsByStatus(missions, 'terminee');
+  // Calculs DIRECTS sans missionHelpers
+  const enAttente = missions.filter(m => m.statut === 'brouillon').length;
+  const enCours = missions.filter(m => ['envoyee', 'confirmee'].includes(m.statut)).length;
+  const pec = missions.filter(m => m.statut === 'pec').length;
+  const terminees = missions.filter(m => m.statut === 'terminee').length;
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -22,12 +22,12 @@ function StatCards({ missions, onStatCardClick }) {
           color: 'primary.main',
         }}
       >
-        📊 Vue d'ensemble
+        📊 Vue d'ensemble (TEST 3)
       </Typography>
 
       <Grid container spacing={3}>
         {/* En attente */}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="En attente"
             count={enAttente}
@@ -38,7 +38,7 @@ function StatCards({ missions, onStatCardClick }) {
         </Grid>
 
         {/* En cours */}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="En cours"
             count={enCours}
@@ -48,8 +48,19 @@ function StatCards({ missions, onStatCardClick }) {
           />
         </Grid>
 
+        {/* Prise en charge */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Prise en charge"
+            count={pec}
+            color="#F44336"
+            icon="🔴"
+            onClick={() => onStatCardClick('pec')}
+          />
+        </Grid>
+
         {/* Terminées */}
-        <Grid item xs={12} sm={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Terminées"
             count={terminees}
