@@ -67,8 +67,9 @@ export const deleteMission = (id) =>
 export const envoyerMission = (id) => 
   api.post(`/missions/${id}/envoyer`);
 
-export const envoyerMissionsParDate = (date) => 
-  api.post('/missions/envoyer-date', { date });
+export const envoyerMissionsParDate = async (data) => {
+  return api.post('/missions/envoyer-par-date', data);
+};
 
 export const ajouterCommentaire = (id, commentaire) => 
   api.post(`/missions/${id}/commentaire`, { commentaire });
