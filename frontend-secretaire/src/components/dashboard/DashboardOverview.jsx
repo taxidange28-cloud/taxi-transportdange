@@ -10,7 +10,7 @@ import {
 
 /**
  * Composant principal du Dashboard Overview
- * Affiche les statistiques cliquables
+ * TEST 1 : SEULEMENT StatCards activé
  */
 function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -27,6 +27,7 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
 
   // Gestion du clic sur un StatCard
   const handleStatCardClick = (type) => {
+    console.log('🔍 TEST 1 - StatCard cliqué:', type);
     setModalType(type);
     setModalOpen(true);
   };
@@ -66,23 +67,23 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
         return {
           title: 'Missions en cours',
           color: '#FFC107',
-          icon:  '🟡',
+          icon: '🟡',
         };
-      case 'pec': 
+      case 'pec':
         return {
-          title:  'Missions en prise en charge',
+          title: 'Missions en prise en charge',
           color: '#F44336',
           icon: '🔴',
         };
-      case 'terminee': 
+      case 'terminee':
         return {
           title: 'Missions terminées',
           color: '#4CAF50',
           icon: '🟢',
         };
-      default: 
+      default:
         return {
-          title:  '',
+          title: '',
           color: '#000',
           icon: '',
         };
@@ -94,20 +95,16 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* ========== TEST :  COMPOSANTS COMMENTÉS ========== */}
+      {/* ========== TEST 1 : SEULEMENT STATCARDS ========== */}
       
-      {/* Statistiques cliquables - COMMENTÉ POUR TEST */}
-      {/* <StatCards missions={missions} onStatCardClick={handleStatCardClick} /> */}
-
-      {/* Affichage de debug temporaire */}
-      <Box sx={{ p: 3, bgcolor:  '#f5f5f5', borderRadius: 2, mb: 3 }}>
-        <h3>🧪 Dashboard Overview - Mode Test</h3>
-        <p>✅ Missions chargées :  {missions.length}</p>
-        <p>✅ Chauffeurs : {chauffeurs.length}</p>
-        <p>⚠️ StatCards et MissionsModal désactivés temporairement</p>
+      <Box sx={{ p: 2, bgcolor: '#e3f2fd', borderRadius: 1, mb: 2 }}>
+        <strong>🧪 TEST 1 en cours</strong> - StatCards activé, Modal désactivé
       </Box>
 
-      {/* Modal avec liste des missions - COMMENTÉ POUR TEST */}
+      {/* Statistiques cliquables - ACTIVÉ */}
+      <StatCards missions={missions} onStatCardClick={handleStatCardClick} />
+
+      {/* Modal avec liste des missions - DÉSACTIVÉ POUR TEST */}
       {/* <MissionsModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -124,3 +121,10 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
 }
 
 export default DashboardOverview;
+```
+
+**1.5** Scrollez en bas
+
+**1.6** Dans "Commit message" écrivez :
+```
+TEST 1 - Enable StatCards only
