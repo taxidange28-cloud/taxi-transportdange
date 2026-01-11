@@ -13,6 +13,7 @@ import PlanningTabs from '../components/planning/PlanningTabs';
 import FormulaireMission from '../components/FormulaireMission';
 import PopupDetails from '../components/PopupDetails';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
+import GestionChauffeurs from '../components/GestionChauffeurs';
 import { getMissions, getChauffeurs, exportExcel, envoyerMissionsParDate } from '../services/api';
 import socketService from '../services/socket';
 import { format } from 'date-fns';
@@ -32,6 +33,7 @@ function Dashboard() {
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderMissions, setReminderMissions] = useState([]);
   const [reminderDate, setReminderDate] = useState(null);
+  const [openGestionChauffeurs, setOpenGestionChauffeurs] = useState(false);
   const [filters, setFilters] = useState({
     date_debut: format(new Date(), 'yyyy-MM-dd'),
     date_fin: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
@@ -248,13 +250,24 @@ function Dashboard() {
             ➕ Nouvelle Mission
           </Button>
           
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleExport}
-          >
-            📊 Export Excel
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => setOpenGestionChauffeurs(true)}
+              startIcon={<span>👤</span>}
+            >
+              Gestion Chauffeurs
+            </Button>
+
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleExport}
+            >
+              📊 Export Excel
+            </Button>
+          </Box>
         </Box>
 
         <PlanningTabs
@@ -288,6 +301,12 @@ function Dashboard() {
         onEditModeChange={setEditMode}
         onSuccess={handleMissionUpdated}
         onDelete={handleMissionDeleted}
+      />
+
+      <GestionChauffeurs
+        open={openGestionChauffeurs}
+        onClose={() => setOpenGestionChauffeurs(false)}
+        onSuccess={(message) => showSnackbar(message, 'success')}
       />
 
       <ReminderModal
