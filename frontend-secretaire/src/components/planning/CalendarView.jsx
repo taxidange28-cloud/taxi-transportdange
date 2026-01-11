@@ -30,7 +30,7 @@ function CalendarView({ missions, onMissionClick }) {
 
       let color = '#9e9e9e';
       if (mission.statut === 'brouillon') color = '#FF9800';
-      if (mission.statut === 'envoyee' || mission.statut === 'confirmee') color = '#03A9F4';
+      if (mission.statut === 'envoyee' || mission.statut === 'confirmee') color = '#03f488';
       if (mission.statut === 'pec') color = '#F44336';
       if (mission.statut === 'terminee') color = '#4CAF50';
 
