@@ -3,6 +3,7 @@ import { Box, Tabs, Tab } from '@mui/material';
 import ListView from './ListView';
 import CalendarView from './CalendarView';
 import TimelineView from './TimelineView';
+import ChauffeursView from './ChauffeursView';
 
 function PlanningTabs({ missions, chauffeurs, loading, onMissionClick, filters, onFiltersChange, onRefresh }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -25,7 +26,7 @@ function PlanningTabs({ missions, chauffeurs, loading, onMissionClick, filters, 
         <Tab label="📋 Vue Liste" />
         <Tab label="📅 Calendrier" />
         <Tab label="📊 Timeline" />
-        <Tab label="👤 Par Chauffeur" disabled />
+        <Tab label="👤 Par Chauffeur" />
       </Tabs>
 
       {activeTab === 0 && (
@@ -56,9 +57,11 @@ function PlanningTabs({ missions, chauffeurs, loading, onMissionClick, filters, 
       )}
 
       {activeTab === 3 && (
-        <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-          Vue par Chauffeur - En développement
-        </Box>
+        <ChauffeursView
+          missions={missions}
+          chauffeurs={chauffeurs}
+          onMissionClick={onMissionClick}
+        />
       )}
     </Box>
   );
