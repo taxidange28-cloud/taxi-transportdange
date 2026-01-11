@@ -5,7 +5,7 @@ import MissionsModal from './MissionsModal';
 import {
   filterMissionsEnAttente,
   filterMissionsEnCours,
-  countMissionsByStatus,
+  filterMissionsPEC,
 } from '../../utils/missionHelpers';
 
 /**
@@ -44,6 +44,8 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
         return filterMissionsEnAttente(missions);
       case 'en_cours':
         return filterMissionsEnCours(missions);
+      case 'pec':
+        return filterMissionsPEC(missions);
       case 'terminee':
         return missions.filter(m => m.statut === 'terminee');
       default:
@@ -65,6 +67,12 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
           title: 'Missions en cours',
           color: '#FFC107',
           icon: '🟡',
+        };
+      case 'pec':
+        return {
+          title: 'Missions en prise en charge',
+          color: '#F44336',
+          icon: '🔴',
         };
       case 'terminee':
         return {
@@ -99,6 +107,7 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
         color={modalInfo.color}
         icon={modalInfo.icon}
         onMissionClick={onMissionClick}
+        type={modalType}
       />
     </Box>
   );
