@@ -50,7 +50,7 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
       case 'brouillon':
         return { title: 'Missions en attente', color: '#FF9800', icon: '🟠' };
       case 'en_cours':
-        return { title: 'Missions en cours', color: '#FFC107', icon: '🟡' };
+        return { title: 'Missions en cours', color: '#03A9F4', icon: '🔵' };
       case 'pec':
         return { title: 'Missions en prise en charge', color: '#F44336', icon: '🔴' };
       case 'terminee':
