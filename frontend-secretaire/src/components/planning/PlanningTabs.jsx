@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import ListView from './ListView';
+import CalendarView from './CalendarView';
 
 function PlanningTabs({ missions, chauffeurs, loading, onMissionClick, filters, onFiltersChange, onRefresh }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -21,7 +22,7 @@ function PlanningTabs({ missions, chauffeurs, loading, onMissionClick, filters, 
         }}
       >
         <Tab label="📋 Vue Liste" />
-        <Tab label="📅 Calendrier" disabled />
+        <Tab label="📅 Calendrier" />
         <Tab label="📊 Timeline" disabled />
         <Tab label="👤 Par Chauffeur" disabled />
       </Tabs>
@@ -39,9 +40,10 @@ function PlanningTabs({ missions, chauffeurs, loading, onMissionClick, filters, 
       )}
 
       {activeTab === 1 && (
-        <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-          Vue Calendrier - En développement
-        </Box>
+        <CalendarView
+          missions={missions}
+          onMissionClick={onMissionClick}
+        />
       )}
 
       {activeTab === 2 && (
