@@ -1,11 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, Paper, Chip, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { format, startOfDay, addDays, isWithinInterval, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 function TimelineView({ missions, onMissionClick, filters }) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-
   const availableDates = useMemo(() => {
     const dates = new Set();
     missions.forEach(mission => {
@@ -14,10 +12,18 @@ function TimelineView({ missions, onMissionClick, filters }) {
     return Array.from(dates).sort();
   }, [missions]);
 
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  useEffect(() => {
+    if (availableDates.length > 0 && !selectedDate) {
+      setSelectedDate(availableDates[0]);
+    }
+  }, [availableDates, selectedDate]);
+
   const filteredMissions = useMemo(() => {
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    if (!selectedDate) return [];
     return missions
-      .filter(m => m.date_mission === dateStr)
+      .filter(m => m.date_mission === selectedDate)
       .sort((a, b) => a.heure_prevue.localeCompare(b.heure_prevue));
   }, [missions, selectedDate]);
 
@@ -49,15 +55,35 @@ function TimelineView({ missions, onMissionClick, filters }) {
     return Math.max(15, (24 - hour) * 3);
   };
 
+  if (availableDates.length === 0) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="text.secondary">
+          Aucune mission dans la période sélectionnée
+        </Typography>
+      </Paper>
+    );
+  }
+
+  if (!selectedDate) {
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="text.secondary">
+          Chargement...
+        </Typography>
+      </Paper>
+    );
+  }
+
   return (
     <Box>
       <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
         <FormControl sx={{ minWidth: 250 }}>
           <InputLabel>Date</InputLabel>
           <Select
-            value={format(selectedDate, 'yyyy-MM-dd')}
+            value={selectedDate}
             label="Date"
-            onChange={(e) => setSelectedDate(parseISO(e.target.value))}
+            onChange={(e) => setSelectedDate(e.target.value)}
           >
             {availableDates.map(date => (
               <MenuItem key={date} value={date}>
