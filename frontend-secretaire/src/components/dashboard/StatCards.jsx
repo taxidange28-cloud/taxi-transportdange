@@ -18,7 +18,7 @@ function StatCards({ missions, onStatCardClick }) {
           <StatCard title="En attente" count={enAttente} color="#FF9800" icon="🟠" onClick={() => onStatCardClick('brouillon')} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="En cours" count={enCours} color="#FFC107" icon="🟡" onClick={() => onStatCardClick('en_cours')} />
+          <StatCard title="En cours" count={enCours} color="#03A9F4" icon="🔵" onClick={() => onStatCardClick('en_cours')} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard title="Prise en charge" count={pec} color="#F44336" icon="🔴" onClick={() => onStatCardClick('pec')} />
