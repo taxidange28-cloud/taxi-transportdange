@@ -54,7 +54,7 @@ export const getStatusColor = (statut) => {
   const colors = {
     'brouillon': '#FF9800',   // Orange
     'envoyee': '#2196F3',     // Bleu
-    'confirmee': '#03A9F4',   // Bleu
+    'confirmee': '#03f488',   // Vert clair
     'pec': '#F44336',         // Rouge
     'terminee': '#4CAF50'     // Vert
   };
