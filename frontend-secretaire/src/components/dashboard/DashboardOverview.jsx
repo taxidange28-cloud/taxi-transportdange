@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import StatCards from './StatCards';
 import MissionsModal from './MissionsModal';
@@ -20,15 +20,15 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
     );
   }
 
-  const handleStatCardClick = useCallback((type) => {
+  const handleStatCardClick = (type) => {
     setModalType(type);
     setModalOpen(true);
-  }, []);
+  };
 
-  const handleCloseModal = useCallback(() => {
+  const handleCloseModal = () => {
     setModalOpen(false);
     setModalType(null);
-  }, []);
+  };
 
   const getFilteredMissions = () => {
     switch (modalType) {
