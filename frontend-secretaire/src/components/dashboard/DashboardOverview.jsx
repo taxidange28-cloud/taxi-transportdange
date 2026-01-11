@@ -8,15 +8,10 @@ import {
   filterMissionsPEC,
 } from '../../utils/missionHelpers';
 
-/**
- * Composant principal du Dashboard Overview
- * Affiche les statistiques cliquables
- */
 function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
 
-  // Spinner pendant le chargement
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -25,19 +20,16 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
     );
   }
 
-  // ✅ CORRECTION : useCallback pour éviter re-création à chaque render
   const handleStatCardClick = useCallback((type) => {
     setModalType(type);
     setModalOpen(true);
   }, []);
 
-  // Fermer le modal
   const handleCloseModal = useCallback(() => {
     setModalOpen(false);
     setModalType(null);
   }, []);
 
-  // Obtenir les missions filtrées selon le type
   const getFilteredMissions = () => {
     switch (modalType) {
       case 'brouillon':
@@ -53,39 +45,18 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
     }
   };
 
-  // Obtenir les infos du modal selon le type
   const getModalInfo = () => {
     switch (modalType) {
       case 'brouillon':
-        return {
-          title: 'Missions en attente',
-          color: '#FF9800',
-          icon: '🟠',
-        };
+        return { title: 'Missions en attente', color: '#FF9800', icon: '🟠' };
       case 'en_cours':
-        return {
-          title: 'Missions en cours',
-          color: '#FFC107',
-          icon: '🟡',
-        };
+        return { title: 'Missions en cours', color: '#FFC107', icon: '🟡' };
       case 'pec':
-        return {
-          title: 'Missions en prise en charge',
-          color: '#F44336',
-          icon: '🔴',
-        };
+        return { title: 'Missions en prise en charge', color: '#F44336', icon: '🔴' };
       case 'terminee':
-        return {
-          title: 'Missions terminées',
-          color: '#4CAF50',
-          icon: '🟢',
-        };
+        return { title: 'Missions terminées', color: '#4CAF50', icon: '🟢' };
       default:
-        return {
-          title: '',
-          color: '#000',
-          icon: '',
-        };
+        return { title: '', color: '#000', icon: '' };
     }
   };
 
@@ -94,10 +65,7 @@ function DashboardOverview({ missions, chauffeurs, onMissionClick, loading }) {
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Statistiques cliquables */}
       <StatCards missions={missions} onStatCardClick={handleStatCardClick} />
-
-      {/* Modal avec liste des missions */}
       <MissionsModal
         open={modalOpen}
         onClose={handleCloseModal}
