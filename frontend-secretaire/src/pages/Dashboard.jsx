@@ -32,6 +32,11 @@ function Dashboard() {
     date_fin: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
   });
 
+  // Afficher une notification
+  const showSnackbar = useCallback((message, severity = 'info') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
   // Charger les missions depuis l'API
   const loadMissions = useCallback(async () => {
     try {
@@ -42,10 +47,74 @@ function Dashboard() {
     }
   }, [filters]);
 
-  // Initialisation :  vérifier authentification et charger données
+  // Mettre à jour une mission via WebSocket
+  const handleMissionUpdate = useCallback((mission) => {
+    setMissions((prev) => {
+      const index = prev.findIndex((m) => m.id === mission.id);
+      if (index >= 0) {
+        const newMissions = [...prev];
+        newMissions[index] = mission;
+        return newMissions;
+      }
+      return [mission, ...prev];
+    });
+
+    setSelectedMission((prev) => {
+      if (prev?. id === mission.id) {
+        return mission;
+      }
+      return prev;
+    });
+  }, []);
+
+  // Gérer l'envoi multiple de missions
+  const handleMissionsUpdate = useCallback((updatedMissions) => {
+    loadMissions();
+    showSnackbar(`${updatedMissions.length} mission(s) envoyée(s)`, 'success');
+  }, [loadMissions, showSnackbar]);
+
+  // Supprimer une mission
+  const handleMissionDelete = useCallback((data) => {
+    setMissions((prev) => prev.filter((m) => m.id !== data.id));
+    setSelectedMission((prev) => {
+      if (prev?.id === data.id) {
+        setOpenDetails(false);
+        return null;
+      }
+      return prev;
+    });
+  }, []);
+
+  // Configurer les listeners WebSocket
+  const setupSocketListeners = useCallback(() => {
+    socketService.on('mission: nouvelle', handleMissionUpdate);
+    socketService.on('mission:envoyee', handleMissionUpdate);
+    socketService.on('missions:envoyees', handleMissionsUpdate);
+    socketService.on('mission:modifiee', handleMissionUpdate);
+    socketService.on('mission:supprimee', handleMissionDelete);
+    socketService.on('mission:confirmee', handleMissionUpdate);
+    socketService.on('mission:pec', handleMissionUpdate);
+    socketService.on('mission:terminee', handleMissionUpdate);
+    socketService.on('mission:commentaire', handleMissionUpdate);
+  }, [handleMissionUpdate, handleMissionsUpdate, handleMissionDelete]);
+
+  // Retirer les listeners WebSocket
+  const removeSocketListeners = useCallback(() => {
+    socketService.off('mission:nouvelle', handleMissionUpdate);
+    socketService.off('mission:envoyee', handleMissionUpdate);
+    socketService.off('missions:envoyees', handleMissionsUpdate);
+    socketService.off('mission:modifiee', handleMissionUpdate);
+    socketService.off('mission:supprimee', handleMissionDelete);
+    socketService. off('mission:confirmee', handleMissionUpdate);
+    socketService.off('mission:pec', handleMissionUpdate);
+    socketService.off('mission:terminee', handleMissionUpdate);
+    socketService.off('mission:commentaire', handleMissionUpdate);
+  }, [handleMissionUpdate, handleMissionsUpdate, handleMissionDelete]);
+
+  // Initialisation :  vérifier authentification et charger données (UNE SEULE FOIS)
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || user.role !== 'secretaire') {
+    if (!user || user. role !== 'secretaire') {
       navigate('/login');
       return;
     }
@@ -72,82 +141,18 @@ function Dashboard() {
     return () => {
       removeSocketListeners();
     };
-  }, [navigate, filters]); // Ajouter filters dans les dépendances
+  }, [navigate, setupSocketListeners, removeSocketListeners, showSnackbar]); // ✅ PAS filters !
 
   // Recharger les missions quand les filtres changent
   useEffect(() => {
-    if (!loading) {
+    if (! loading) {
       loadMissions();
     }
-  }, [filters, loadMissions, loading]); // ✅ CORRECTION : toutes les dépendances
-
-  // Configurer les listeners WebSocket
-  const setupSocketListeners = () => {
-    socketService.on('mission:nouvelle', handleMissionUpdate);
-    socketService.on('mission:envoyee', handleMissionUpdate);
-    socketService.on('missions:envoyees', handleMissionsUpdate);
-    socketService.on('mission:modifiee', handleMissionUpdate);
-    socketService. on('mission:supprimee', handleMissionDelete);
-    socketService.on('mission:confirmee', handleMissionUpdate);
-    socketService.on('mission:pec', handleMissionUpdate);
-    socketService.on('mission:terminee', handleMissionUpdate);
-    socketService.on('mission:commentaire', handleMissionUpdate);
-  };
-
-  // Retirer les listeners WebSocket
-  const removeSocketListeners = () => {
-    socketService.off('mission:nouvelle', handleMissionUpdate);
-    socketService.off('mission:envoyee', handleMissionUpdate);
-    socketService.off('missions:envoyees', handleMissionsUpdate);
-    socketService.off('mission:modifiee', handleMissionUpdate);
-    socketService.off('mission:supprimee', handleMissionDelete);
-    socketService.off('mission:confirmee', handleMissionUpdate);
-    socketService.off('mission:pec', handleMissionUpdate);
-    socketService. off('mission:terminee', handleMissionUpdate);
-    socketService.off('mission:commentaire', handleMissionUpdate);
-  };
-
-  // Mettre à jour une mission via WebSocket
-  const handleMissionUpdate = (mission) => {
-    setMissions((prev) => {
-      const index = prev. findIndex((m) => m.id === mission.id);
-      if (index >= 0) {
-        const newMissions = [... prev];
-        newMissions[index] = mission;
-        return newMissions;
-      }
-      return [mission, ...prev];
-    });
-
-    // Si c'est la mission actuellement affichée, mettre à jour
-    if (selectedMission?.id === mission.id) {
-      setSelectedMission(mission);
-    }
-  };
-
-  // Gérer l'envoi multiple de missions
-  const handleMissionsUpdate = (updatedMissions) => {
-    loadMissions();
-    showSnackbar(`${updatedMissions.length} mission(s) envoyée(s)`, 'success');
-  };
-
-  // Supprimer une mission
-  const handleMissionDelete = (data) => {
-    setMissions((prev) => prev.filter((m) => m.id !== data.id));
-    if (selectedMission?.id === data. id) {
-      setOpenDetails(false);
-      setSelectedMission(null);
-    }
-  };
-
-  // Afficher une notification
-  const showSnackbar = (message, severity = 'info') => {
-    setSnackbar({ open: true, message, severity });
-  };
+  }, [filters, loadMissions, loading]);
 
   // Fermer la notification
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar({ ... snackbar, open: false });
   };
 
   // Callback après création de mission
@@ -184,8 +189,8 @@ function Dashboard() {
   // Exporter les missions en Excel
   const handleExport = async () => {
     try {
-      const response = await exportExcel(filters.date_debut, filters.date_fin);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const response = await exportExcel(filters. date_debut, filters.date_fin);
+      const url = window.URL.createObjectURL(new Blob([response. data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `missions_${filters.date_debut}_${filters.date_fin}. xlsx`);
@@ -224,7 +229,7 @@ function Dashboard() {
         <Divider sx={{ my: 4 }} />
 
         {/* Boutons d'action */}
-        <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
+        <Box sx={{ mb: 3, display: 'flex', gap:  2, justifyContent: 'space-between' }}>
           <Button
             variant="contained"
             color="primary"
@@ -287,7 +292,7 @@ function Dashboard() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar. message}
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Box>
