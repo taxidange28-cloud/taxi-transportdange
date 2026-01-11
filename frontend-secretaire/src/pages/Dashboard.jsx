@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -32,12 +32,38 @@ function Dashboard() {
     date_fin: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
   });
 
+  // Fonction de chargement des missions avec useCallback pour éviter boucles
+  const loadMissions = useCallback(async () => {
+    try {
+      const response = await getMissions(filters);
+      setMissions(response.data);
+    } catch (error) {
+      console.error('Erreur chargement missions:', error);
+    }
+  }, [filters]);
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || user.role !== 'secretaire') {
       navigate('/login');
       return;
     }
+
+    const loadData = async () => {
+      try {
+        const [missionsRes, chauffeursRes] = await Promise.all([
+          getMissions(filters),
+          getChauffeurs(),
+        ]);
+        setMissions(missionsRes.data);
+        setChauffeurs(chauffeursRes.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Erreur chargement données:', error);
+        showSnackbar('Erreur de chargement', 'error');
+        setLoading(false);
+      }
+    };
 
     loadData();
     setupSocketListeners();
@@ -46,36 +72,14 @@ function Dashboard() {
       removeSocketListeners();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    loadMissions();
+    if (!loading) {
+      loadMissions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
-
-  const loadData = async () => {
-    try {
-      const [missionsRes, chauffeursRes] = await Promise.all([
-        getMissions(filters),
-        getChauffeurs(),
-      ]);
-      setMissions(missionsRes.data);
-      setChauffeurs(chauffeursRes.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Erreur chargement données:', error);
-      showSnackbar('Erreur de chargement', 'error');
-      setLoading(false);
-    }
-  };
-
-  const loadMissions = async () => {
-    try {
-      const response = await getMissions(filters);
-      setMissions(response.data);
-    } catch (error) {
-      console.error('Erreur chargement missions:', error);
-    }
-  };
 
   const setupSocketListeners = () => {
     socketService.on('mission:nouvelle', handleMissionUpdate);
@@ -195,7 +199,7 @@ function Dashboard() {
       <Header onLogout={handleLogout} />
       
       <Container maxWidth="xl" sx={{ py: 3 }}>
-        {/* ========== NOUVEAU DASHBOARD ========== */}
+        {/* ========== DASHBOARD ========== */}
         <DashboardOverview
           missions={missions}
           chauffeurs={chauffeurs}
@@ -206,7 +210,7 @@ function Dashboard() {
         {/* ========== SÉPARATEUR ========== */}
         <Divider sx={{ my: 4 }} />
 
-        {/* ========== PLANNING EXISTANT (INCHANGÉ) ========== */}
+        {/* ========== PLANNING ========== */}
         <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
           <Button
             variant="contained"
