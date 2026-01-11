@@ -37,7 +37,7 @@ function ChauffeursView({ missions, chauffeurs, onMissionClick }) {
     const colors = {
       'brouillon': '#FF9800',
       'envoyee': '#2196F3',
-      'confirmee': '#FFC107',
+      'confirmee': '#03f488',
       'pec': '#F44336',
       'terminee': '#4CAF50'
     };
