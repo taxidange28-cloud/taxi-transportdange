@@ -32,16 +32,17 @@ function Dashboard() {
     date_fin: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
   });
 
-  // Fonction de chargement des missions avec useCallback pour éviter boucles
+  // Charger les missions depuis l'API
   const loadMissions = useCallback(async () => {
     try {
       const response = await getMissions(filters);
       setMissions(response.data);
     } catch (error) {
-      console.error('Erreur chargement missions:', error);
+      console.error('Error loading missions:', error);
     }
   }, [filters]);
 
+  // Initialisation :  vérifier authentification et charger données
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || user.role !== 'secretaire') {
@@ -59,7 +60,7 @@ function Dashboard() {
         setChauffeurs(chauffeursRes.data);
         setLoading(false);
       } catch (error) {
-        console.error('Erreur chargement données:', error);
+        console.error('Error loading data:', error);
         showSnackbar('Erreur de chargement', 'error');
         setLoading(false);
       }
@@ -71,28 +72,29 @@ function Dashboard() {
     return () => {
       removeSocketListeners();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [navigate, filters]); // Ajouter filters dans les dépendances
 
+  // Recharger les missions quand les filtres changent
   useEffect(() => {
     if (!loading) {
       loadMissions();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, loadMissions, loading]); // ✅ CORRECTION : toutes les dépendances
 
+  // Configurer les listeners WebSocket
   const setupSocketListeners = () => {
     socketService.on('mission:nouvelle', handleMissionUpdate);
     socketService.on('mission:envoyee', handleMissionUpdate);
     socketService.on('missions:envoyees', handleMissionsUpdate);
     socketService.on('mission:modifiee', handleMissionUpdate);
-    socketService.on('mission:supprimee', handleMissionDelete);
+    socketService. on('mission:supprimee', handleMissionDelete);
     socketService.on('mission:confirmee', handleMissionUpdate);
     socketService.on('mission:pec', handleMissionUpdate);
     socketService.on('mission:terminee', handleMissionUpdate);
     socketService.on('mission:commentaire', handleMissionUpdate);
   };
 
+  // Retirer les listeners WebSocket
   const removeSocketListeners = () => {
     socketService.off('mission:nouvelle', handleMissionUpdate);
     socketService.off('mission:envoyee', handleMissionUpdate);
@@ -101,15 +103,16 @@ function Dashboard() {
     socketService.off('mission:supprimee', handleMissionDelete);
     socketService.off('mission:confirmee', handleMissionUpdate);
     socketService.off('mission:pec', handleMissionUpdate);
-    socketService.off('mission:terminee', handleMissionUpdate);
+    socketService. off('mission:terminee', handleMissionUpdate);
     socketService.off('mission:commentaire', handleMissionUpdate);
   };
 
+  // Mettre à jour une mission via WebSocket
   const handleMissionUpdate = (mission) => {
     setMissions((prev) => {
-      const index = prev.findIndex((m) => m.id === mission.id);
+      const index = prev. findIndex((m) => m.id === mission.id);
       if (index >= 0) {
-        const newMissions = [...prev];
+        const newMissions = [... prev];
         newMissions[index] = mission;
         return newMissions;
       }
@@ -122,33 +125,39 @@ function Dashboard() {
     }
   };
 
+  // Gérer l'envoi multiple de missions
   const handleMissionsUpdate = (updatedMissions) => {
     loadMissions();
     showSnackbar(`${updatedMissions.length} mission(s) envoyée(s)`, 'success');
   };
 
+  // Supprimer une mission
   const handleMissionDelete = (data) => {
     setMissions((prev) => prev.filter((m) => m.id !== data.id));
-    if (selectedMission?.id === data.id) {
+    if (selectedMission?.id === data. id) {
       setOpenDetails(false);
       setSelectedMission(null);
     }
   };
 
+  // Afficher une notification
   const showSnackbar = (message, severity = 'info') => {
     setSnackbar({ open: true, message, severity });
   };
 
+  // Fermer la notification
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Callback après création de mission
   const handleMissionCreated = () => {
     loadMissions();
     setOpenForm(false);
     showSnackbar('Mission créée avec succès', 'success');
   };
 
+  // Callback après modification de mission
   const handleMissionUpdated = () => {
     loadMissions();
     setOpenDetails(false);
@@ -157,6 +166,7 @@ function Dashboard() {
     showSnackbar('Mission modifiée avec succès', 'success');
   };
 
+  // Callback après suppression de mission
   const handleMissionDeleted = () => {
     loadMissions();
     setOpenDetails(false);
@@ -164,31 +174,34 @@ function Dashboard() {
     showSnackbar('Mission supprimée', 'info');
   };
 
+  // Ouvrir le popup de détails d'une mission
   const handleOpenDetails = (mission) => {
     setSelectedMission(mission);
     setOpenDetails(true);
     setEditMode(false);
   };
 
+  // Exporter les missions en Excel
   const handleExport = async () => {
     try {
       const response = await exportExcel(filters.date_debut, filters.date_fin);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `missions_${filters.date_debut}_${filters.date_fin}.xlsx`);
+      link.setAttribute('download', `missions_${filters.date_debut}_${filters.date_fin}. xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       showSnackbar('Export Excel réussi', 'success');
     } catch (error) {
-      console.error('Erreur export:', error);
+      console.error('Export error:', error);
       showSnackbar('Erreur lors de l\'export', 'error');
     }
   };
 
+  // Déconnexion
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage. removeItem('token');
     localStorage.removeItem('user');
     socketService.disconnect();
     navigate('/login');
@@ -199,7 +212,7 @@ function Dashboard() {
       <Header onLogout={handleLogout} />
       
       <Container maxWidth="xl" sx={{ py: 3 }}>
-        {/* ========== DASHBOARD ========== */}
+        {/* Dashboard avec statistiques */}
         <DashboardOverview
           missions={missions}
           chauffeurs={chauffeurs}
@@ -207,10 +220,10 @@ function Dashboard() {
           loading={loading}
         />
 
-        {/* ========== SÉPARATEUR ========== */}
+        {/* Séparateur visuel */}
         <Divider sx={{ my: 4 }} />
 
-        {/* ========== PLANNING ========== */}
+        {/* Boutons d'action */}
         <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
           <Button
             variant="contained"
@@ -230,6 +243,7 @@ function Dashboard() {
           </Button>
         </Box>
 
+        {/* Planning des missions */}
         <Planning
           missions={missions}
           chauffeurs={chauffeurs}
@@ -241,6 +255,7 @@ function Dashboard() {
         />
       </Container>
 
+      {/* Formulaire de création de mission */}
       <FormulaireMission
         open={openForm}
         onClose={() => setOpenForm(false)}
@@ -248,6 +263,7 @@ function Dashboard() {
         chauffeurs={chauffeurs}
       />
 
+      {/* Popup de détails d'une mission */}
       <PopupDetails
         open={openDetails}
         onClose={() => {
@@ -263,6 +279,7 @@ function Dashboard() {
         onDelete={handleMissionDeleted}
       />
 
+      {/* Notifications toast */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -270,7 +287,7 @@ function Dashboard() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
+          {snackbar. message}
         </Alert>
       </Snackbar>
     </Box>
