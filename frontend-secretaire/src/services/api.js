@@ -88,5 +88,18 @@ export const exportExcel = (debut, fin) => {
     responseType: 'blob',
   });
 };
+export const getChauffeursManage = () =>
+  api.get('/chauffeurs/manage');
 
+export const createChauffeur = (data) =>
+  api.post('/chauffeurs/manage', data);
+
+export const updateChauffeur = (id, data) =>
+  api.put(`/chauffeurs/manage/${id}`, data);
+
+export const updateChauffeurPassword = (id, newPassword) =>
+  api.put(`/chauffeurs/manage/${id}/password`, { newPassword });
+
+export const deleteChauffeur = (id) =>
+  api.delete(`/chauffeurs/manage/${id}`);
 export default api;
