@@ -13,9 +13,11 @@ import PlanningTabs from '../components/planning/PlanningTabs';
 import FormulaireMission from '../components/FormulaireMission';
 import PopupDetails from '../components/PopupDetails';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
-import { getMissions, getChauffeurs, exportExcel } from '../services/api';
+import { getMissions, getChauffeurs, exportExcel, envoyerMissionsParDate } from '../services/api';
 import socketService from '../services/socket';
 import { format } from 'date-fns';
+import ReminderModal from '../components/ReminderModal';
+import { checkShouldShowReminder } from '../services/reminderService';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -27,6 +29,9 @@ function Dashboard() {
   const [selectedMission, setSelectedMission] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderMissions, setReminderMissions] = useState([]);
+  const [reminderDate, setReminderDate] = useState(null);
   const [filters, setFilters] = useState({
     date_debut: format(new Date(), 'yyyy-MM-dd'),
     date_fin: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
@@ -141,6 +146,17 @@ function Dashboard() {
     }
   }, [filters, loadMissions, loading]);
 
+  useEffect(() => {
+    if (!loading && missions.length > 0) {
+      const result = checkShouldShowReminder(missions);
+      if (result.show) {
+        setReminderMissions(result.missions);
+        setReminderDate(result.date);
+        setReminderOpen(true);
+      }
+    }
+  }, [missions, loading]);
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -186,6 +202,18 @@ function Dashboard() {
     } catch (error) {
       console.error('Export error:', error);
       showSnackbar('Erreur lors de l\'export', 'error');
+    }
+  };
+
+  const handleSendTomorrowMissions = async (date) => {
+    try {
+      await envoyerMissionsParDate({ date });
+      showSnackbar(`${reminderMissions.length} mission(s) envoyée(s)`, 'success');
+      setReminderOpen(false);
+      loadMissions();
+    } catch (error) {
+      console.error('Error sending missions:', error);
+      showSnackbar('Erreur lors de l\'envoi', 'error');
     }
   };
 
@@ -260,6 +288,14 @@ function Dashboard() {
         onEditModeChange={setEditMode}
         onSuccess={handleMissionUpdated}
         onDelete={handleMissionDeleted}
+      />
+
+      <ReminderModal
+        open={reminderOpen}
+        onClose={() => setReminderOpen(false)}
+        missions={reminderMissions}
+        date={reminderDate}
+        onSendNow={handleSendTomorrowMissions}
       />
 
       <Snackbar
