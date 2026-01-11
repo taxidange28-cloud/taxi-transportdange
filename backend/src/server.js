@@ -4,13 +4,12 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
-// Importer les configurations
 const { pool } = require('./config/database');
 const { initializeFirebase } = require('./config/firebase');
 
-// Importer les routes
 const authRoutes = require('./routes/auth');
 const missionRoutes = require('./routes/missions');
 const chauffeurRoutes = require('./routes/chauffeurs');
@@ -20,11 +19,9 @@ const initRoutes = require('./routes/initRoutes');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
 
-// Initialiser l'application
 const app = express();
 const server = http.createServer(app);
 
-// Configuration CORS
 const corsOptions = {
   origin: process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:3001',
@@ -40,33 +37,28 @@ const corsOptions = {
   allowedHeaders:  ['Content-Type', 'Authorization'],
 };
 
-// Initialiser Socket.io avec CORS
 const io = socketIo(server, {
   cors: corsOptions,
 });
 
-// Middleware de sécurité
 app.use(helmet({
-  contentSecurityPolicy: false, // Désactiver pour permettre les connexions WebSocket
+  contentSecurityPolicy: false,
 }));
 
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limite de 100 requêtes par fenêtre
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard',
 });
 
 app.use('/api/', limiter);
 
-// Stocker l'instance Socket.io pour l'utiliser dans les contrôleurs
 app.set('io', io);
 
-// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/chauffeurs', chauffeurRoutes);
@@ -76,7 +68,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api', initRoutes);
 
-// Route de test
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -85,12 +76,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Gestion des erreurs 404
 app.use((req, res) => {
   res.status(404).json({ error: 'Route non trouvée' });
 });
 
-// Gestion globale des erreurs
 app.use((err, req, res, next) => {
   console.error('Erreur:', err);
   res.status(err.status || 500).json({
@@ -98,7 +87,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Configuration WebSocket
 io.on('connection', (socket) => {
   console.log('✅ Client WebSocket connecté:', socket.id);
 
@@ -106,33 +94,58 @@ io.on('connection', (socket) => {
     console.log('❌ Client WebSocket déconnecté:', socket.id);
   });
 
-  // Événements personnalisés peuvent être ajoutés ici
   socket.on('join-room', (room) => {
     socket.join(room);
     console.log(`Client ${socket.id} a rejoint la room ${room}`);
   });
 });
 
-// Initialiser Firebase
 initializeFirebase();
 
-// Démarrer le serveur
+const createAdminIfNotExists = async () => {
+  try {
+    const result = await pool.query("SELECT * FROM utilisateurs WHERE username = 'admin' AND role = 'admin'");
+    
+    if (result.rows.length === 0) {
+      const hashedPassword = await bcrypt.hash('admin77281670', 10);
+      await pool.query(
+        "INSERT INTO utilisateurs (username, password, role, created_at) VALUES ($1, $2, $3, NOW())",
+        ['admin', hashedPassword, 'admin']
+      );
+      console.log('');
+      console.log('═══════════════════════════════════════════════');
+      console.log('✅ Compte administrateur créé automatiquement');
+      console.log('═══════════════════════════════════════════════');
+      console.log('   Username: admin');
+      console.log('   Password: admin77281670');
+      console.log('⚠️  IMPORTANT: Changez ce mot de passe !');
+      console.log('═══════════════════════════════════════════════');
+      console.log('');
+    } else {
+      console.log('ℹ️  Compte administrateur existe déjà');
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de la création du compte admin:', error);
+  }
+};
+
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
-  console.log('');
-  console.log('═══════════════════════════════════════════════');
-  console.log('🚕 Transport DanGE - Backend API');
-  console.log('═══════════════════════════════════════════════');
-  console.log(`✅ Serveur démarré sur le port ${PORT}`);
-  console.log(`📍 URL: http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log('═══════════════════════════════════════════════');
-  console.log('');
+createAdminIfNotExists().then(() => {
+  server.listen(PORT, () => {
+    console.log('');
+    console.log('═══════════════════════════════════════════════');
+    console.log('🚕 Transport DanGE - Backend API');
+    console.log('═══════════════════════════════════════════════');
+    console.log(`✅ Serveur démarré sur le port ${PORT}`);
+    console.log(`📍 URL: http://localhost:${PORT}`);
+    console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('═══════════════════════════════════════════════');
+    console.log('');
+  });
 });
 
-// Gestion de l'arrêt propre
 process.on('SIGTERM', () => {
   console.log('SIGTERM reçu, fermeture du serveur...');
   server.close(() => {
