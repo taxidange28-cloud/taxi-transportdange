@@ -6,10 +6,20 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { Logout } from '@mui/icons-material';
+import { Logout, Map, Dashboard as DashboardIcon } from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function Header({ onLogout }) {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || {};
+    } catch {
+      return {};
+    }
+  })();
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <AppBar position="static" elevation={2}>
@@ -21,6 +31,38 @@ function Header({ onLogout }) {
           <Typography variant="body2" sx={{ opacity: 0.9 }}>
             Planning des missions
           </Typography>
+        </Box>
+
+        {/* MENU NAVIGATION */}
+        <Box sx={{ display: 'flex', gap: 1, mr: 2 }}>
+          <Button
+            color="inherit"
+            startIcon={<DashboardIcon />}
+            onClick={() => navigate('/')}
+            sx={{
+              borderRadius: 2,
+              bgcolor: location.pathname === '/' ? 'rgba(255,255,255,0.2)' : 'transparent',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)',
+              },
+            }}
+          >
+            Planning
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<Map />}
+            onClick={() => navigate('/geolocalisation')}
+            sx={{
+              borderRadius: 2,
+              bgcolor: location.pathname === '/geolocalisation' ? 'rgba(255,255,255,0.2)' : 'transparent',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)',
+              },
+            }}
+          >
+            Géolocalisation
+          </Button>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
