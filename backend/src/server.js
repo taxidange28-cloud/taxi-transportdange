@@ -19,9 +19,12 @@ const initRoutes = require('./routes/initRoutes');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
 const geolocationRoutes = require('./routes/geolocation');
+const { runMigrations } = require('./utils/runMigrations');
+
 const app = express();
 const server = http.createServer(app);
 const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
+
 const corsOptions = {
   origin: process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:3001',
@@ -34,13 +37,14 @@ const corsOptions = {
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders:  ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 const io = socketIo(server, {
   cors: corsOptions,
 });
 
+// Sécurité via HelmetJS
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
@@ -49,38 +53,45 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Limitation du taux des requêtes avec express-rate-limit
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard',
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limite des requêtes par fenêtre
+  message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
 });
 
 app.use('/api/', limiter);
 
+// Configuration de Socket.io
 app.set('io', io);
 
+// Initialisation des routes
 app.use('/api/auth', authRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/chauffeurs', chauffeurRoutes);
-app.use('/api/chauffeurs', chauffeurMissionsRoutes);
+app.use('/api/chauffeurs', chauffeurMissionsRoutes); // Cela peut causer une redondance
 app.use('/api/chauffeurs/manage', chauffeursManageRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/geolocation', geolocationRoutes);
 app.use('/api', initRoutes);
+
+// Contrôle de santé API
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'Transport DanGE API is running',
     timestamp: new Date().toISOString(),
   });
 });
 
+// Middleware pour les routes non trouvées
 app.use((req, res) => {
   res.status(404).json({ error: 'Route non trouvée' });
 });
 
+// Gestionnaire global des erreurs
 app.use((err, req, res, next) => {
   console.error('Erreur:', err);
   res.status(err.status || 500).json({
@@ -88,6 +99,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Configuration des événements WebSocket
 io.on('connection', (socket) => {
   console.log('✅ Client WebSocket connecté:', socket.id);
 
@@ -101,8 +113,10 @@ io.on('connection', (socket) => {
   });
 });
 
+// Initialisation de Firebase
 initializeFirebase();
 
+// Création automatique d'un compte administrateur (s'il n'existe pas)
 const createAdminIfNotExists = async () => {
   try {
     const result = await pool.query("SELECT * FROM utilisateurs WHERE username = 'admin' AND role = 'admin'");
@@ -113,15 +127,12 @@ const createAdminIfNotExists = async () => {
         "INSERT INTO utilisateurs (username, password, role, created_at) VALUES ($1, $2, $3, NOW())",
         ['admin', hashedPassword, 'admin']
       );
-      console.log('');
-      console.log('═══════════════════════════════════════════════');
+      console.log('\n═══════════════════════════════════════════════');
       console.log('✅ Compte administrateur créé automatiquement');
-      console.log('═══════════════════════════════════════════════');
       console.log('   Username: admin');
       console.log('   Password: admin77281670');
-      console.log('⚠️  IMPORTANT: Changez ce mot de passe !');
-      console.log('═══════════════════════════════════════════════');
-      console.log('');
+      console.log('⚠️  IMPORTANT: Changez ce mot de passe immédiatement !');
+      console.log('══════════════════════════════════════════���════\n');
     } else {
       console.log('ℹ️  Compte administrateur existe déjà');
     }
@@ -130,43 +141,35 @@ const createAdminIfNotExists = async () => {
   }
 };
 
-const PORT = process.env.PORT || 3000;
-
-createAdminIfNotExists().then(() => {
-  server.listen(PORT, () => {
-    console.log('');
-    console.log('═══════════════════════════════════════════════');
-    console.log('🚕 Transport DanGE - Backend API');
-    console.log('═══════════════════════════════════════════════');
-    console.log(`✅ Serveur démarré sur le port ${PORT}`);
-    console.log(`📍 URL: http://localhost:${PORT}`);
-    console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('═══════════════════════════════════════════════');
-    console.log('');
+// Démarrage du serveur
+createAdminIfNotExists()
+  .then(() => runMigrations())
+  .then(() => {
+    server.listen(process.env.PORT || 3000, () => {
+      console.log('\n═══════════════════════════════════════════════');
+      console.log('🚕 Transport DanGE - Backend API');
+      console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 3000}`);
+      console.log('═══════════════════════════════════════════════\n');
+    });
+  })
+  .catch((error) => {
+    console.error('❌ Erreur au démarrage du serveur:', error);
+    process.exit(1);
   });
-});
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM reçu, fermeture du serveur...');
+// Gestion des interruptions (SIGTERM et SIGINT)
+const gracefulShutdown = () => {
+  console.log('Arrêt du serveur en cours...');
   server.close(() => {
-    console.log('Serveur fermé');
+    console.log('Serveur arrêté.');
     pool.end(() => {
-      console.log('Connexion PostgreSQL fermée');
+      console.log('Connexion PostgreSQL fermée.');
       process.exit(0);
     });
   });
-});
+};
 
-process.on('SIGINT', () => {
-  console.log('\nSIGINT reçu, fermeture du serveur...');
-  server.close(() => {
-    console.log('Serveur fermé');
-    pool.end(() => {
-      console.log('Connexion PostgreSQL fermée');
-      process.exit(0);
-    });
-  });
-});
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 module.exports = { app, server, io };
