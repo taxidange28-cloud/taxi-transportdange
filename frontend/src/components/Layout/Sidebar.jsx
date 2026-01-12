@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Plus, List, Car, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Plus, List, Car, BarChart3, Navigation } from 'lucide-react';
 
 const Sidebar = () => {
   const { user } = useAuth();
@@ -10,6 +10,7 @@ const Sidebar = () => {
     { to: '/secretaire/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/secretaire/creer-mission', icon: Plus, label: 'Créer Mission' },
     { to: '/secretaire/missions', icon: List, label: 'Liste Missions' },
+    { to: '/secretaire/geolocalisation', icon: Navigation, label: 'Géolocalisation' },
     { to: '/secretaire/stats', icon: BarChart3, label: 'Statistiques' },
   ];
 
