@@ -91,5 +91,12 @@ export const adminApi = {
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   resetPassword: (id) => api.post(`/admin/users/${id}/reset-password`),
 };
+export const getActivePositions = () =>
+  api.get('/geolocation/active');
 
+export const getChauffeurPosition = (id) =>
+  api.get(`/geolocation/chauffeur/${id}`);
+
+export const getChauffeurHistory = (id, limit = 50) =>
+  api.get(`/geolocation/history/${id}`, { params: { limit } });
 export default api;
