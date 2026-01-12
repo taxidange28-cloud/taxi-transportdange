@@ -18,7 +18,7 @@ const exportRoutes = require('./routes/export');
 const initRoutes = require('./routes/initRoutes');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
-
+const geolocationRoutes = require('./routes/geolocation');
 const app = express();
 const server = http.createServer(app);
 const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
@@ -67,8 +67,8 @@ app.use('/api/chauffeurs/manage', chauffeursManageRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/geolocation', geolocationRoutes);
 app.use('/api', initRoutes);
-
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
