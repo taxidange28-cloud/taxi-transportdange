@@ -13,6 +13,7 @@ import ListeMissions from '../components/ListeMissions';
 import { getMissionsChauffeur } from '../services/api';
 import socketService from '../services/socket';
 import { onMessageListener, playNotificationSound } from '../services/notifications';
+import useGeolocation from '../hooks/useGeolocation';
 import { format, addDays } from 'date-fns';
 
 function Missions() {
@@ -22,6 +23,8 @@ function Missions() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [user, setUser] = useState(null);
   
+  // Hook de géolocalisation
+  const { isActive, precision, error: gpsError } = useGeolocation();
   // useRef pour éviter de recréer les listeners
   const listenersSetup = useRef(false);
 
@@ -167,7 +170,7 @@ function Missions() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header user={user} onLogout={handleLogout} />
+      <Header user={user} onLogout={handleLogout} gpsActive={isActive} precision={precision} />
       
       <Container maxWidth="lg" sx={{ py: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
