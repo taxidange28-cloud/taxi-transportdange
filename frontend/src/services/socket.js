@@ -6,6 +6,7 @@ class SocketService {
   constructor() {
     this.socket = null;
     this.listeners = new Map();
+    this.pingInterval = null;
   }
 
   /**
@@ -20,18 +21,22 @@ class SocketService {
     }
 
     if (this.socket?.connected) {
-      console.log('Socket already connected');
+      console.log('🔌 Socket already connected');
       return;
     }
 
+    console.log('🔌 Connexion WebSocket... ', SOCKET_URL);
+
     this.socket = io(SOCKET_URL, {
       auth: {
-        token: token
+        token: token,
       },
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity,
+      timeout: 20000,
     });
 
     this.setupDefaultListeners();
@@ -44,20 +49,84 @@ class SocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('✅ Socket connected:', this.socket.id);
+      console.log('✅ WebSocket connecté:', this.socket.id);
+      this.startHeartbeat();
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ Socket disconnected:', reason);
+      console.log('❌ WebSocket déconnecté:', reason);
+      this.stopHeartbeat();
+      
+      // Reconnexion automatique si le serveur coupe
+      if (reason === 'io server disconnect') {
+        setTimeout(() => {
+          console.log('🔄 Tentative de reconnexion...');
+          this.socket.connect();
+        }, 1000);
+      }
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
+      console.error('❌ Erreur connexion WebSocket:', error.message);
     });
 
     this.socket.on('error', (error) => {
-      console.error('Socket error:', error);
+      console.error('❌ Socket error:', error);
     });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log(`🔄 Reconnecté après ${attemptNumber} tentative(s)`);
+      this.startHeartbeat();
+    });
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`🔄 Tentative de reconnexion #${attemptNumber}...`);
+    });
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('❌ Erreur de reconnexion:', error.message);
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('❌ Reconnexion échouée après plusieurs tentatives');
+    });
+
+    // Réponse au pong du serveur
+    this.socket.on('pong', () => {
+      console.log('💚 Pong reçu du serveur');
+    });
+  }
+
+  /**
+   * Start heartbeat to keep connection alive
+   */
+  startHeartbeat() {
+    // Arrêter l'ancien intervalle s'il existe
+    this.stopHeartbeat();
+
+    // Ping toutes les 60 secondes
+    this.pingInterval = setInterval(() => {
+      if (this.socket?.connected) {
+        console.log('💓 Ping WebSocket');
+        this.socket.emit('ping');
+      } else {
+        console.warn('⚠️ WebSocket non connecté, arrêt du heartbeat');
+        this.stopHeartbeat();
+      }
+    }, 60000); // 60 secondes
+
+    console.log('💓 Heartbeat démarré (ping toutes les 60s)');
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  stopHeartbeat() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+      console.log('💔 Heartbeat arrêté');
+    }
   }
 
   /**
@@ -107,7 +176,7 @@ class SocketService {
    */
   emit(event, data) {
     if (!this.socket?.connected) {
-      console.warn('Socket not connected. Cannot emit event:', event);
+      console.warn('⚠️ WebSocket non connecté, impossible d\'envoyer:', event);
       return;
     }
 
@@ -118,10 +187,12 @@ class SocketService {
    * Disconnect from socket server
    */
   disconnect() {
+    this.stopHeartbeat();
+    
     if (this.socket) {
       // Remove all custom listeners
       this.listeners.forEach((callbacks, event) => {
-        callbacks.forEach(callback => {
+        callbacks.forEach((callback) => {
           this.socket.off(event, callback);
         });
       });
@@ -129,7 +200,7 @@ class SocketService {
 
       this.socket.disconnect();
       this.socket = null;
-      console.log('Socket disconnected');
+      console.log('🔌 WebSocket déconnecté');
     }
   }
 
