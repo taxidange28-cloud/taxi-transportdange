@@ -6,28 +6,75 @@ class SocketService {
   constructor() {
     this.socket = null;
     this.listeners = {};
+    this.pingInterval = null;
   }
 
   connect(token) {
     if (this.socket?.connected) {
+      console.log('🔌 WebSocket déjà connecté');
       return;
     }
+
+    console.log('🔌 Connexion WebSocket... ', SOCKET_URL);
 
     this.socket = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity,
+      timeout: 20000,
     });
+
+    this.setupListeners();
+  }
+
+  setupListeners() {
+    if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('✅ WebSocket connecté');
+      console.log('✅ WebSocket connecté:', this.socket.id);
+      this.startHeartbeat();
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('❌ WebSocket déconnecté');
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ WebSocket déconnecté:', reason);
+      this.stopHeartbeat();
+
+      // Reconnexion automatique si le serveur coupe
+      if (reason === 'io server disconnect') {
+        setTimeout(() => {
+          console.log('🔄 Tentative de reconnexion...');
+          this.socket.connect();
+        }, 1000);
+      }
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Erreur WebSocket:', error);
+      console.error('❌ Erreur connexion WebSocket:', error.message);
+    });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log(`🔄 Reconnecté après ${attemptNumber} tentative(s)`);
+      this.startHeartbeat();
+    });
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`🔄 Tentative de reconnexion #${attemptNumber}...`);
+    });
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('❌ Erreur de reconnexion:', error.message);
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('❌ Reconnexion échouée après plusieurs tentatives');
+    });
+
+    // Réponse au pong du serveur
+    this.socket.on('pong', () => {
+      console.log('💚 Pong reçu du serveur');
     });
 
     // Restaurer les listeners
@@ -38,8 +85,43 @@ class SocketService {
     });
   }
 
+  /**
+   * Start heartbeat to keep connection alive
+   */
+  startHeartbeat() {
+    // Arrêter l'ancien intervalle s'il existe
+    this.stopHeartbeat();
+
+    // Ping toutes les 60 secondes
+    this.pingInterval = setInterval(() => {
+      if (this.socket?.connected) {
+        console.log('💓 Ping WebSocket');
+        this.socket.emit('ping');
+      } else {
+        console.warn('⚠️ WebSocket non connecté, arrêt du heartbeat');
+        this.stopHeartbeat();
+      }
+    }, 60000); // 60 secondes
+
+    console.log('💓 Heartbeat démarré (ping toutes les 60s)');
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  stopHeartbeat() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+      console.log('💔 Heartbeat arrêté');
+    }
+  }
+
   disconnect() {
+    this.stopHeartbeat();
+
     if (this.socket) {
+      console.log('🔌 Déconnexion WebSocket');
       this.socket.disconnect();
       this.socket = null;
     }
@@ -58,9 +140,7 @@ class SocketService {
 
   off(event, callback) {
     if (this.listeners[event]) {
-      this.listeners[event] = this.listeners[event].filter(
-        (cb) => cb !== callback
-      );
+      this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback);
     }
 
     if (this.socket) {
@@ -69,9 +149,15 @@ class SocketService {
   }
 
   emit(event, data) {
-    if (this.socket) {
+    if (this.socket?.connected) {
       this.socket.emit(event, data);
+    } else {
+      console.warn('⚠️ WebSocket non connecté, impossible d\'envoyer:', event);
     }
+  }
+
+  isConnected() {
+    return this.socket?.connected || false;
   }
 }
 
