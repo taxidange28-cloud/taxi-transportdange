@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getMissionsChauffeur } from '../../services/api';
 import Card from '../Common/Card';
-import { Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, Navigation } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
+import useGeolocation from '../../hooks/useGeolocation';
+import locationService from '../../services/locationService';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { position, error: gpsError, isTracking, startTracking, stopTracking } = useGeolocation();
   const [stats, setStats] = useState({
     today: 0,
     pending: 0,
@@ -22,6 +25,22 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    startTracking();
+    locationService.startTracking();
+
+    return () => {
+      stopTracking();
+      locationService.stopTracking();
+    };
+  }, [startTracking, stopTracking]);
+
+  useEffect(() => {
+    if (position && isTracking) {
+      locationService.updatePosition(position);
+    }
+  }, [position, isTracking]);
+
   const loadStats = async () => {
     try {
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -31,8 +50,8 @@ const Dashboard = () => {
         date_debut: today,
         date_fin: nextWeek,
       });
-      const missions = response.data;
 
+      const missions = response.data;
       const todayMissions = missions.filter(m => m.date_mission === today);
       const pendingCount = missions.filter(m => m.statut === 'envoyee' || m.statut === 'confirmee').length;
       const inProgressCount = missions.filter(m => m.statut === 'pec').length;
@@ -91,7 +110,27 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
+    <div className="relative">
+      {isTracking && (
+        <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          <Navigation className="w-4 h-4" />
+          <span className="font-semibold text-sm">GPS Actif</span>
+          {position && (
+            <span className="text-xs opacity-90">
+              ±{Math.round(position.accuracy)}m
+            </span>
+          )}
+        </div>
+      )}
+
+      {gpsError && (
+        <div className="fixed top-20 right-6 z-50 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm">{gpsError}</span>
+        </div>
+      )}
+
       <h2 className="text-2xl font-bold text-gray-800 mb-2">Dashboard Chauffeur</h2>
       <p className="text-gray-600 mb-6">Bienvenue, {user?.nom || user?.username}!</p>
       
@@ -120,6 +159,13 @@ const Dashboard = () => {
           Consultez vos missions dans le menu "Mes Missions". Vous pouvez confirmer la réception,
           prendre en charge et terminer vos missions directement depuis l'application.
         </p>
+        {isTracking && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800">
+              <strong>🛰️ Géolocalisation activée :</strong> Votre position est partagée avec le dispatching en temps réel.
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );
