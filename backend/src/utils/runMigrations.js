@@ -1,91 +1,57 @@
-import React from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-} from '@mui/material';
-import { Logout, Map, Dashboard as DashboardIcon } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+const { pool } = require('../config/database');
 
-function Header({ onLogout }) {
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('user')) || {};
-    } catch {
-      return {};
+const runMigrations = async () => {
+  try {
+    console.log('🔄 Vérification des migrations...');
+
+    // Vérification de l'existence de la table positions_gps
+    const checkTable = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'positions_gps'
+      );
+    `);
+
+    if (!checkTable.rows[0]?.exists) {
+      console.log('📍 Création de la table positions_gps...');
+
+      await pool.query(`
+        CREATE TABLE positions_gps (
+          id SERIAL PRIMARY KEY,
+          chauffeur_id INTEGER NOT NULL REFERENCES chauffeurs(id) ON DELETE CASCADE,
+          latitude DECIMAL(10, 8) NOT NULL,
+          longitude DECIMAL(11, 8) NOT NULL,
+          accuracy INTEGER,
+          speed DECIMAL(5, 2),
+          heading DECIMAL(5, 2),
+          timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_positions_gps_chauffeur ON positions_gps(chauffeur_id);
+      `);
+
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_positions_gps_timestamp ON positions_gps(timestamp);
+      `);
+
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_positions_gps_active ON positions_gps(is_active);
+      `);
+
+      console.log('✅ Table positions_gps créée avec succès !');
+    } else {
+      console.log('✅ Table positions_gps existe déjà');
     }
-  })();
+  } catch (error) {
+    console.error('❌ Erreur lors des migrations :', error.message);
+    throw error; // Relance l'erreur pour la gestion dans les appels externes
+  }
+};
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  return (
-    <AppBar position="static" elevation={2}>
-      <Toolbar>
-        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-          <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mr: 2 }}>
-            🚕 Transport DanGE
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Planning des missions
-          </Typography>
-        </Box>
-
-        {/* MENU NAVIGATION */}
-        <Box sx={{ display: 'flex', gap: 1, mr: 2 }}>
-          <Button
-            color="inherit"
-            startIcon={<DashboardIcon />}
-            onClick={() => navigate('/')}
-            sx={{
-              borderRadius: 2,
-              bgcolor: location.pathname === '/' ? 'rgba(255,255,255,0.2)' : 'transparent',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.1)',
-              },
-            }}
-          >
-            Planning
-          </Button>
-          <Button
-            color="inherit"
-            startIcon={<Map />}
-            onClick={() => navigate('/geolocalisation')}
-            sx={{
-              borderRadius: 2,
-              bgcolor: location.pathname === '/geolocalisation' ? 'rgba(255,255,255,0.2)' : 'transparent',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.1)',
-              },
-            }}
-          >
-            Géolocalisation
-          </Button>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="body1">
-            👤 {user?.username || 'Secrétaire'}
-          </Typography>
-          <Button
-            color="inherit"
-            onClick={onLogout}
-            startIcon={<Logout />}
-            sx={{ 
-              borderRadius: 2,
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.1)',
-              },
-            }}
-          >
-            Déconnexion
-          </Button>
-        </Box>
-      </Toolbar>
-    </AppBar>
-  );
-}
-
-export default Header;
+// Export du module
+module.exports = { runMigrations };
