@@ -64,6 +64,16 @@ export const terminerMission = (missionId) =>
 export const ajouterCommentaire = (missionId, commentaire) => 
   api.post(`/missions/${missionId}/commentaire`, { commentaire });
 
+// Géolocalisation
+export const envoyerPosition = async (latitude, longitude, precision = null) => {
+  const response = await api.post('/geolocation/position', {
+    latitude,
+    longitude,
+    precision,
+  });
+  return response.data;
+};
+
 // Chauffeurs - Enregistrement token FCM
 export const enregistrerFcmToken = (chauffeurId, fcmToken) => 
   api.post(`/chauffeurs/${chauffeurId}/fcm-token`, { fcmToken });
