@@ -12,8 +12,15 @@ class Location {
     `;
     
     const values = [chauffeur_id, latitude, longitude, accuracy, speed, heading, is_active];
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    
+    try {
+      const result = await pool.query(query, values);
+      console.log('✅ Position GPS enregistrée:', result.rows[0]);
+      return result. rows[0];
+    } catch (error) {
+      console.error('❌ Erreur création position GPS:', error.message);
+      throw error;
+    }
   }
 
   static async getLatestByChauffeurId(chauffeurId) {
@@ -24,24 +31,37 @@ class Location {
       LIMIT 1
     `;
     
-    const result = await pool.query(query, [chauffeurId]);
-    return result.rows[0] || null;
+    try {
+      const result = await pool.query(query, [chauffeurId]);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('❌ Erreur récupération dernière position:', error.message);
+      throw error;
+    }
   }
 
   static async getAllActivePositions() {
+    // ✅ CORRECTION :  Utiliser 'utilisateurs' au lieu de 'chauffeurs'
     const query = `
       SELECT DISTINCT ON (p.chauffeur_id)
         p.*,
-        c.nom as chauffeur_nom,
-        c.username as chauffeur_username
+        u.nom as chauffeur_nom,
+        u.username as chauffeur_username
       FROM positions_gps p
-      INNER JOIN chauffeurs c ON p.chauffeur_id = c.id
+      INNER JOIN utilisateurs u ON p.chauffeur_id = u.id
       WHERE p.timestamp > NOW() - INTERVAL '5 minutes'
+        AND u.role = 'chauffeur'
       ORDER BY p.chauffeur_id, p.timestamp DESC
     `;
     
-    const result = await pool.query(query);
-    return result.rows;
+    try {
+      const result = await pool.query(query);
+      console.log(`📍 ${result.rows.length} position(s) active(s) récupérée(s)`);
+      return result.rows;
+    } catch (error) {
+      console.error('❌ Erreur récupération positions actives:', error. message);
+      throw error;
+    }
   }
 
   static async getHistory(chauffeurId, limit = 50) {
@@ -52,8 +72,13 @@ class Location {
       LIMIT $2
     `;
     
-    const result = await pool.query(query, [chauffeurId, limit]);
-    return result.rows;
+    try {
+      const result = await pool.query(query, [chauffeurId, limit]);
+      return result.rows;
+    } catch (error) {
+      console.error('❌ Erreur récupération historique:', error.message);
+      throw error;
+    }
   }
 
   static async setInactive(chauffeurId) {
@@ -64,8 +89,14 @@ class Location {
       RETURNING *
     `;
     
-    const result = await pool.query(query, [chauffeurId]);
-    return result.rows;
+    try {
+      const result = await pool.query(query, [chauffeurId]);
+      console.log(`🛑 Position(s) marquée(s) inactive(s) pour chauffeur ${chauffeurId}`);
+      return result.rows;
+    } catch (error) {
+      console.error('❌ Erreur marquage inactif:', error.message);
+      throw error;
+    }
   }
 
   static async cleanOldPositions(days = 7) {
@@ -75,8 +106,14 @@ class Location {
       RETURNING COUNT(*) as deleted_count
     `;
     
-    const result = await pool.query(query);
-    return result.rows[0];
+    try {
+      const result = await pool.query(query);
+      console.log(`🗑️ ${result.rows[0]?.deleted_count || 0} position(s) supprimée(s)`);
+      return result.rows[0];
+    } catch (error) {
+      console.error('❌ Erreur nettoyage positions:', error.message);
+      throw error;
+    }
   }
 }
 
