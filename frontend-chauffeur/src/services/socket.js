@@ -92,7 +92,7 @@ class SocketService {
     // Arrêter l'ancien intervalle s'il existe
     this.stopHeartbeat();
 
-    // Ping toutes les 60 secondes
+    // ✅ MODIFICATION : Ping toutes les 5 minutes (300 secondes)
     this.pingInterval = setInterval(() => {
       if (this.socket?.connected) {
         console.log('💓 Ping WebSocket');
@@ -101,9 +101,9 @@ class SocketService {
         console.warn('⚠️ WebSocket non connecté, arrêt du heartbeat');
         this.stopHeartbeat();
       }
-    }, 60000); // 60 secondes
+    }, 300000); // ✅ 300 secondes = 5 minutes
 
-    console.log('💓 Heartbeat démarré (ping toutes les 60s)');
+    console.log('💓 Heartbeat démarré (ping toutes les 5 min)'); // ✅ Message mis à jour
   }
 
   /**
