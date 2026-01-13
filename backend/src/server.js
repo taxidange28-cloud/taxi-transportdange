@@ -53,14 +53,41 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Limitation du taux des requêtes avec express-rate-limit
-const limiter = rateLimit({
+// ✅ MODIFICATION : Rate limiters par route (adapté pour GPS 5 minutes)
+
+// Rate limiter strict pour le login (éviter les attaques brute force)
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limite des requêtes par fenêtre
-  message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
+  max: 10, // 10 tentatives de login max
+  message: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes.',
+  skipSuccessfulRequests: true, // Ne compte pas les connexions réussies
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-app.use('/api/', limiter);
+// Rate limiter souple pour le GPS (adapté pour envoi toutes les 5 minutes)
+const gpsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Max 5 positions en 15 min (1 toutes les 5min = 3, on met 5 pour marge)
+  message: 'Trop de mises à jour GPS, veuillez patienter.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter général (très souple)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // 300 requêtes en 15 min (beaucoup plus souple)
+  message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Application des limiters par route (AVANT les autres routes)
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/geolocation/position', gpsLimiter);
+app.use('/api/geolocation/update', gpsLimiter);
+app.use('/api/', generalLimiter);
 
 // Configuration de Socket.io
 app.set('io', io);
@@ -69,7 +96,7 @@ app.set('io', io);
 app.use('/api/auth', authRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/chauffeurs', chauffeurRoutes);
-app.use('/api/chauffeurs', chauffeurMissionsRoutes); // Cela peut causer une redondance
+app.use('/api/chauffeurs', chauffeurMissionsRoutes);
 app.use('/api/chauffeurs/manage', chauffeursManageRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/admin', adminRoutes);
@@ -111,6 +138,12 @@ io.on('connection', (socket) => {
     socket.join(room);
     console.log(`Client ${socket.id} a rejoint la room ${room}`);
   });
+
+  // ✅ AJOUT : Répondre aux pings pour maintenir la connexion
+  socket.on('ping', () => {
+    socket.emit('pong');
+    console.log('💚 Pong envoyé au client', socket.id);
+  });
 });
 
 // Initialisation de Firebase
@@ -132,7 +165,7 @@ const createAdminIfNotExists = async () => {
       console.log('   Username: admin');
       console.log('   Password: admin77281670');
       console.log('⚠️  IMPORTANT: Changez ce mot de passe immédiatement !');
-      console.log('══════════════════════════════════════════���════\n');
+      console.log('═══════════════════════════════════════════════\n');
     } else {
       console.log('ℹ️  Compte administrateur existe déjà');
     }
@@ -149,6 +182,10 @@ createAdminIfNotExists()
       console.log('\n═══════════════════════════════════════════════');
       console.log('🚕 Transport DanGE - Backend API');
       console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 3000}`);
+      console.log('📊 Rate limiting configuré: ');
+      console.log('   - Login:  10 tentatives / 15 min');
+      console.log('   - GPS: 5 positions / 15 min');
+      console.log('   - Général: 300 requêtes / 15 min');
       console.log('═══════════════════════════════════════════════\n');
     });
   })
