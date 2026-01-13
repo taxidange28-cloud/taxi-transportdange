@@ -5,12 +5,12 @@ const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http:/
 class SocketService {
   constructor() {
     this.socket = null;
-    this. listeners = {};
+    this.listeners = {};
     this.pingInterval = null;
   }
 
   connect(token) {
-    if (this.socket?. connected) {
+    if (this.socket?.connected) {
       console.log('🔌 WebSocket déjà connecté');
       return;
     }
@@ -18,8 +18,8 @@ class SocketService {
     console.log('🔌 Connexion WebSocket... ', SOCKET_URL);
 
     this.socket = io(SOCKET_URL, {
-      auth:  { token },
-      transports:  ['websocket', 'polling'],
+      auth: { token },
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -39,13 +39,13 @@ class SocketService {
     });
 
     this.socket.on('disconnect', (reason) => {
-      console. log('❌ WebSocket déconnecté:', reason);
+      console.log('❌ WebSocket déconnecté:', reason);
       this.stopHeartbeat();
-      
+
       // Reconnexion automatique si le serveur coupe
       if (reason === 'io server disconnect') {
         setTimeout(() => {
-          console.log('🔄 Tentative de reconnexion.. .');
+          console.log('🔄 Tentative de reconnexion...');
           this.socket.connect();
         }, 1000);
       }
@@ -92,18 +92,18 @@ class SocketService {
     // Arrêter l'ancien intervalle s'il existe
     this.stopHeartbeat();
 
-    // Ping toutes les 60 secondes
-    this. pingInterval = setInterval(() => {
-      if (this.socket?. connected) {
+    // ✅ MODIFICATION : Ping toutes les 5 minutes (300 secondes)
+    this.pingInterval = setInterval(() => {
+      if (this.socket?.connected) {
         console.log('💓 Ping WebSocket');
         this.socket.emit('ping');
       } else {
         console.warn('⚠️ WebSocket non connecté, arrêt du heartbeat');
         this.stopHeartbeat();
       }
-    }, 60000); // 60 secondes
+    }, 300000); // ✅ 300 secondes = 5 minutes
 
-    console.log('💓 Heartbeat démarré (ping toutes les 60s)');
+    console.log('💓 Heartbeat démarré (ping toutes les 5 min)');
   }
 
   /**
@@ -119,7 +119,7 @@ class SocketService {
 
   disconnect() {
     this.stopHeartbeat();
-    
+
     if (this.socket) {
       console.log('🔌 Déconnexion WebSocket');
       this.socket.disconnect();
@@ -140,21 +140,19 @@ class SocketService {
 
   off(event, callback) {
     if (this.listeners[event]) {
-      this.listeners[event] = this.listeners[event]. filter(
-        (cb) => cb !== callback
-      );
+      this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback);
     }
 
     if (this.socket) {
-      this.socket. off(event, callback);
+      this.socket.off(event, callback);
     }
   }
 
   emit(event, data) {
-    if (this.socket?. connected) {
+    if (this.socket?.connected) {
       this.socket.emit(event, data);
     } else {
-      console. warn('⚠️ WebSocket non connecté, impossible d\'envoyer:', event);
+      console.warn('⚠️ WebSocket non connecté, impossible d\'envoyer:', event);
     }
   }
 
