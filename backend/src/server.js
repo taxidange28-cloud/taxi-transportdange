@@ -26,7 +26,7 @@ const server = http.createServer(app);
 const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS?.split(',') || [
+  origin:  process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:3001',
     'http://localhost:3002',
     'http://localhost:5173',
@@ -53,7 +53,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ MODIFICATION : Rate limiters par route (adapté pour GPS 5 minutes)
+// ✅ Rate limiters par route (CORRIGÉ pour GPS 5 minutes)
 
 // Rate limiter strict pour le login (éviter les attaques brute force)
 const loginLimiter = rateLimit({
@@ -65,13 +65,21 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limiter souple pour le GPS (adapté pour envoi toutes les 5 minutes)
+// ✅ Rate limiter souple pour le GPS (CORRIGÉ :  10 positions / 30 min)
 const gpsLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Max 5 positions en 15 min (1 toutes les 5min = 3, on met 5 pour marge)
+  windowMs:  30 * 60 * 1000, // ✅ 30 minutes (au lieu de 15)
+  max: 10, // ✅ 10 positions max (au lieu de 5)
   message: 'Trop de mises à jour GPS, veuillez patienter.',
   standardHeaders: true,
   legacyHeaders: false,
+  handler:  (req, res) => {
+    console.warn(`⚠️ Rate limit GPS atteint pour IP ${req.ip}`);
+    res.status(429).json({
+      success: false,
+      error: 'Trop de mises à jour GPS, veuillez patienter.',
+      retryAfter: 300, // 5 minutes
+    });
+  },
 });
 
 // Rate limiter général (très souple)
@@ -80,7 +88,7 @@ const generalLimiter = rateLimit({
   max: 300, // 300 requêtes en 15 min (beaucoup plus souple)
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders:  false,
 });
 
 // Application des limiters par route (AVANT les autres routes)
@@ -139,7 +147,7 @@ io.on('connection', (socket) => {
     console.log(`Client ${socket.id} a rejoint la room ${room}`);
   });
 
-  // ✅ AJOUT : Répondre aux pings pour maintenir la connexion
+  // ✅ Répondre aux pings pour maintenir la connexion
   socket.on('ping', () => {
     socket.emit('pong');
     console.log('💚 Pong envoyé au client', socket.id);
@@ -155,7 +163,7 @@ const createAdminIfNotExists = async () => {
     const result = await pool.query("SELECT * FROM utilisateurs WHERE username = 'admin' AND role = 'admin'");
     
     if (result.rows.length === 0) {
-      const hashedPassword = await bcrypt.hash('admin77281670', 10);
+      const hashedPassword = await bcrypt. hash('admin77281670', 10);
       await pool.query(
         "INSERT INTO utilisateurs (username, password, role, created_at) VALUES ($1, $2, $3, NOW())",
         ['admin', hashedPassword, 'admin']
@@ -178,13 +186,13 @@ const createAdminIfNotExists = async () => {
 createAdminIfNotExists()
   .then(() => runMigrations())
   .then(() => {
-    server.listen(process.env.PORT || 3000, () => {
-      console.log('\n═══════════════════════════════════════════════');
+    server.listen(process. env.PORT || 3000, () => {
+      console. log('\n═══════════════════════════════════════════════');
       console.log('🚕 Transport DanGE - Backend API');
       console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 3000}`);
       console.log('📊 Rate limiting configuré: ');
-      console.log('   - Login:  10 tentatives / 15 min');
-      console.log('   - GPS: 5 positions / 15 min');
+      console.log('   - Login: 10 tentatives / 15 min');
+      console.log('   - GPS: 10 positions / 30 min');
       console.log('   - Général: 300 requêtes / 15 min');
       console.log('═══════════════════════════════════════════════\n');
     });
