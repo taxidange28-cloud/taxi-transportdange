@@ -95,7 +95,7 @@ const useGeolocation = () => {
       options
     );
 
-    // Envoyer la position au serveur toutes les 30 secondes
+    // Envoyer la position au serveur toutes les 300 secondes
     intervalIdRef.current = setInterval(() => {
       // Utiliser getCurrentPosition pour obtenir la position actuelle
       // sans dépendre de la variable d'état position
@@ -109,7 +109,7 @@ const useGeolocation = () => {
         },
         options
       );
-    }, 30000); // 30 secondes
+    }, 300000); // 300 secondes
 
     // Nettoyage
     return () => {
