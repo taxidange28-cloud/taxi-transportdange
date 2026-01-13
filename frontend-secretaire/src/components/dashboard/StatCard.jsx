@@ -10,23 +10,23 @@ function StatCard({ title, count, color, icon, onClick }) {
         borderLeft: `4px solid ${color}`,
         transition: 'transform 0.2s, box-shadow 0.2s',
         cursor: 'pointer',
-        '&:hover': {
+        '&:hover':  {
           transform: 'translateY(-4px)',
           boxShadow: 6,
         },
       }}
     >
-      <CardContent sx={{ textAlign: 'center', py: 3 }}>
-        <Typography variant="h2" sx={{ fontSize: '3rem', mb: 1 }}>
+      <CardContent sx={{ textAlign: 'center', py:  1.5 }}>
+        <Typography variant="h2" sx={{ fontSize: '1.5rem', mb: 0.5 }}>
           {icon}
         </Typography>
-        <Typography variant="h3" sx={{ fontWeight: 'bold', color: color, mb: 0.5 }}>
+        <Typography variant="h3" sx={{ fontWeight: 'bold', color: color, mb: 0.25, fontSize: '2rem' }}>
           {count}
         </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+        <Typography variant="body1" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '0.875rem' }}>
           {title}
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem', mt: 1, display: 'block' }}>
+        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem', mt: 0.5, display: 'block' }}>
           Cliquer pour voir le détail
         </Typography>
       </CardContent>
