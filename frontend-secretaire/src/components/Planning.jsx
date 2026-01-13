@@ -198,7 +198,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                   )}
                 </Box>
 
-                <Grid container spacing={1. 5}> {/* ✅ spacing: 2 → 1.5 */}
+                <Grid container spacing={1.5}> {/* ✅ spacing: 2 → 1.5 */}
                   {dateMissions.map((mission) => {
                     const statutInfo = getStatutInfo(mission.statut);
                     const canModify = mission.statut !== 'pec' && mission.statut !== 'terminee';
@@ -219,7 +219,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                           }}
                           onClick={() => onMissionClick(mission)}
                         >
-                          <CardContent sx={{ p: 0. 75 }}> {/* ✅ 1.5 → 0.75 (÷2) */}
+                          <CardContent sx={{ p: 0.75 }}> {/* ✅ 1.5 → 0.75 (÷2) */}
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.25 }}> {/* ✅ 0.5 → 0.25 */}
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}> {/* ✅ 0.5 → 0.25 */}
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}> {/* ✅ 1rem → 0.75rem */}
