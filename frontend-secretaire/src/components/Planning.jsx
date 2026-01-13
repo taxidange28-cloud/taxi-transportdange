@@ -221,7 +221,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                           }}
                           onClick={() => onMissionClick(mission)}
                         >
-                          <CardContent sx={{ p: 1. 5 }}>
+                          <CardContent sx={{ p: 1.5 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.5 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
