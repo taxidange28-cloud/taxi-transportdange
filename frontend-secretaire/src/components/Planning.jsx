@@ -26,9 +26,9 @@ const getStatutInfo = (statut) => {
   const statutMap = {
     'brouillon': { label: 'Brouillon', color: '#BDBDBD', emoji: '⚪', textColor: '#424242' },
     'envoyee': { label: 'Envoyée', color: '#2196F3', emoji: '🔵', textColor: '#fff' },
-    'confirmee': { label: 'Confirmée', color: '#FFC107', emoji: '🟡', textColor: '#424242' },
+    'confirmee': { label:  'Confirmée', color:  '#FFC107', emoji: '🟡', textColor: '#424242' },
     'pec': { label: 'En cours', color: '#F44336', emoji: '🔴', textColor: '#fff' },
-    'terminee': { label: 'Terminée', color: '#4CAF50', emoji: '🟢', textColor: '#fff' },
+    'terminee':  { label: 'Terminée', color: '#4CAF50', emoji: '🟢', textColor: '#fff' },
   };
   return statutMap[statut] || statutMap['brouillon'];
 };
@@ -45,7 +45,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
         date_debut = format(today, 'yyyy-MM-dd');
         date_fin = format(today, 'yyyy-MM-dd');
         break;
-      case 'tomorrow':
+      case 'tomorrow': 
         const tomorrow = addDays(today, 1);
         date_debut = format(tomorrow, 'yyyy-MM-dd');
         date_fin = format(tomorrow, 'yyyy-MM-dd');
@@ -64,15 +64,16 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
 
   const handleEnvoyerMission = async (e, missionId) => {
     e.stopPropagation();
-    setSending({ ...sending, [missionId]: true });
+    setSending({ ... sending, [missionId]: true });
     try {
       await envoyerMission(missionId);
       onRefresh();
     } catch (error) {
       console.error('Erreur envoi mission:', error);
       alert('Erreur lors de l\'envoi de la mission');
+    } finally {
+      setSending({ ... sending, [missionId]: false });
     }
-    setSending({ ...sending, [missionId]: false });
   };
 
   const handleEnvoyerParDate = async (date) => {
@@ -91,6 +92,9 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
 
   const handleDeleteMission = async (e, missionId) => {
     e.stopPropagation();
+    if (! window.confirm('Êtes-vous sûr de vouloir supprimer cette mission ?')) {
+      return;
+    }
     try {
       await deleteMission(missionId);
       onRefresh();
@@ -102,19 +106,15 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
 
   // Grouper les missions par date (en filtrant les dates invalides)
   const missionsByDate = missions.reduce((acc, mission) => {
-    const date = mission.date_mission;
-    
-    // ✅ CORRECTION : Vérifier le type AVANT d'appeler .trim()
-    if (!date || 
-        typeof date !== 'string' || 
-        date === 'null' || 
-        date === 'undefined' || 
-        date.trim() === '') {
-      console.warn('⚠️ Mission sans date valide:', mission.id, mission.client, 'Date:', date);
+    const date = mission. date_mission;
+
+    // ✅ CORRECTION : Vérifier le type AVANT d'appeler . trim()
+    if (!date || typeof date !== 'string' || date === 'null' || date === 'undefined' || date. trim() === '') {
+      console.warn('⚠️ Mission sans date valide:', mission. id, mission.client, 'Date:', date);
       return acc;
     }
-    
-    if (!acc[date]) {
+
+    if (! acc[date]) {
       acc[date] = [];
     }
     acc[date].push(mission);
@@ -124,11 +124,11 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
   const sortedDates = Object.keys(missionsByDate).sort();
 
   // Compter les missions en brouillon
-  const brouillonCount = missions.filter(m => m.statut === 'brouillon').length;
+  const brouillonCount = missions.filter((m) => m.statut === 'brouillon').length;
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+      <Box sx={{ display:  'flex', justifyContent:  'center', py: 8 }}>
         <CircularProgress />
       </Box>
     );
@@ -136,7 +136,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
 
   return (
     <Box>
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 3, display: 'flex', gap:  2, alignItems: 'center', justifyContent: 'space-between' }}>
         <ButtonGroup variant="outlined" color="primary">
           <Button onClick={() => handleFilterChange('today')}>Aujourd'hui</Button>
           <Button onClick={() => handleFilterChange('tomorrow')}>Demain</Button>
@@ -145,11 +145,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {brouillonCount > 0 && (
-            <Chip
-              label={`${brouillonCount} brouillon(s)`}
-              color="default"
-              size="medium"
-            />
+            <Chip label={`${brouillonCount} brouillon(s)`} color="default" size="medium" />
           )}
           <IconButton onClick={onRefresh} color="primary">
             <RefreshIcon />
@@ -160,7 +156,7 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
       {sortedDates.length === 0 ? (
         <Card>
           <CardContent sx={{ py: 8, textAlign: 'center' }}>
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" color="text. secondary">
               Aucune mission pour cette période
             </Typography>
           </CardContent>
@@ -168,22 +164,23 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
       ) : (
         sortedDates.map((date) => {
           const dateMissions = missionsByDate[date];
-          const brouillonMissions = dateMissions.filter(m => m.statut === 'brouillon');
+          const brouillonMissions = dateMissions.filter((m) => m.statut === 'brouillon');
 
           return (
             <Card key={date} sx={{ mb: 3 }}>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display:  'flex', justifyContent:  'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" color="primary">
-                    📅 {(() => {
+                    📅{' '}
+                    {(() => {
                       try {
-                        if (!date) return 'Date non définie';
+                        if (! date) return 'Date non définie';
 
-                        // ✅ CORRECTION : Extraire seulement YYYY-MM-DD avant d'ajouter l'heure
+                        // ✅ CORRECTION :  Extraire seulement YYYY-MM-DD avant d'ajouter l'heure
                         const dateOnly = date.split('T')[0];
                         const dateObj = new Date(dateOnly + 'T00:00:00');
-                        
-                        if (isNaN(dateObj.getTime())) return 'Date invalide';
+
+                        if (isNaN(dateObj. getTime())) return 'Date invalide';
                         return format(dateObj, 'EEEE dd MMMM yyyy', { locale: fr });
                       } catch (e) {
                         console.error('Erreur date:', date, e);
@@ -215,18 +212,19 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                           sx={{
                             cursor: 'pointer',
                             transition: 'all 0.2s',
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              boxShadow: 4,
+                            '&:hover':  {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3,
                             },
-                            borderLeft: `4px solid ${statutInfo.color}`,
+                            borderLeft: `3px solid ${statutInfo.color}`,
+                            maxHeight: '220px',
                           }}
                           onClick={() => onMissionClick(mission)}
                         >
-                          <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          <CardContent sx={{ p: 1. 5 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.5 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
                                   {mission.heure_prevue}
                                 </Typography>
                                 <Chip
@@ -236,40 +234,42 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                                     bgcolor: statutInfo.color,
                                     color: statutInfo.textColor,
                                     fontWeight: 'bold',
+                                    fontSize:  '0.65rem',
+                                    height: '20px',
                                   }}
                                 />
                               </Box>
                             </Box>
 
-                            <Typography variant="body1" fontWeight="600" gutterBottom>
-                              {mission.client}
+                            <Typography variant="body1" fontWeight="600" gutterBottom sx={{ fontSize: '0.875rem', mb: 0.5 }}>
+                              {mission. client}
                             </Typography>
 
                             <Chip
                               label={mission.type}
                               size="small"
                               color={mission.type === 'CPAM' ? 'info' : 'default'}
-                              sx={{ mb: 1 }}
+                              sx={{ mb: 0.5, height: '20px', fontSize: '0.7rem' }}
                             />
 
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.25, fontSize: '0.75rem' }}>
                               📍 {mission.adresse_depart}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.75rem' }}>
                               📍 {mission.adresse_arrivee}
                             </Typography>
 
-                            <Typography variant="body2" color="primary" fontWeight="600">
+                            <Typography variant="body2" color="primary" fontWeight="600" sx={{ fontSize: '0.75rem' }}>
                               👤 {mission.chauffeur_nom || 'Non assigné'}
                             </Typography>
 
                             {mission.commentaire_chauffeur && (
-                              <Typography variant="body2" color="warning.main" sx={{ mt: 1, fontStyle: 'italic' }}>
+                              <Typography variant="body2" color="warning. main" sx={{ mt: 0.5, fontStyle: 'italic', fontSize: '0.7rem' }}>
                                 💬 {mission.commentaire_chauffeur}
                               </Typography>
                             )}
 
-                            <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                            <Box sx={{ mt: 1, display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
                               {mission.statut === 'brouillon' && (
                                 <Tooltip title="Envoyer la mission">
                                   <IconButton
@@ -277,8 +277,9 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                                     color="primary"
                                     onClick={(e) => handleEnvoyerMission(e, mission.id)}
                                     disabled={sending[mission.id]}
+                                    sx={{ padding: '4px' }}
                                   >
-                                    <SendIcon fontSize="small" />
+                                    <SendIcon sx={{ fontSize: '1rem' }} />
                                   </IconButton>
                                 </Tooltip>
                               )}
@@ -291,8 +292,9 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                                       e.stopPropagation();
                                       onMissionClick(mission);
                                     }}
+                                    sx={{ padding: '4px' }}
                                   >
-                                    <EditIcon fontSize="small" />
+                                    <EditIcon sx={{ fontSize: '1rem' }} />
                                   </IconButton>
                                 </Tooltip>
                               )}
@@ -301,8 +303,9 @@ function Planning({ missions, chauffeurs, loading, onMissionClick, filters, onFi
                                   size="small"
                                   color="error"
                                   onClick={(e) => handleDeleteMission(e, mission.id)}
+                                  sx={{ padding: '4px' }}
                                 >
-                                  <DeleteIcon fontSize="small" />
+                                  <DeleteIcon sx={{ fontSize: '1rem' }} />
                                 </IconButton>
                               </Tooltip>
                             </Box>
