@@ -5,6 +5,7 @@ const { verifyToken } = require('../middleware/auth');
 
 router.use(verifyToken);
 
+// Route POST pour mettre à jour la position (nom original)
 router.post('/update', async (req, res) => {
   try {
     const { latitude, longitude, accuracy, speed, heading } = req.body;
@@ -37,10 +38,10 @@ router.post('/update', async (req, res) => {
       timestamp: location.timestamp,
     });
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'Position enregistrée',
-      location 
+      location,
     });
   } catch (error) {
     console.error('Erreur update position:', error);
@@ -48,6 +49,76 @@ router.post('/update', async (req, res) => {
   }
 });
 
+// Route POST pour envoyer la position (alias pour le frontend chauffeur)
+router.post('/position', async (req, res) => {
+  try {
+    const { latitude, longitude, precision } = req.body;
+    const chauffeurId = req.user.id;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        error: 'Latitude et longitude requises',
+      });
+    }
+
+    if (req.user.role !== 'chauffeur') {
+      return res.status(403).json({
+        success: false,
+        error: 'Réservé aux chauffeurs',
+      });
+    }
+
+    console.log(`📍 Position GPS reçue de chauffeur ${chauffeurId}`);
+
+    const location = await Location.create({
+      chauffeur_id: chauffeurId,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      accuracy: precision ? parseInt(precision) : null,
+      speed: null,
+      heading: null,
+      is_active: true,
+    });
+
+    console.log('✅ Position enregistrée:', {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      precision: location.accuracy,
+    });
+
+    // Diffuser via WebSocket
+    const io = req.app.get('io');
+    io.emit('geolocation:update', {
+      chauffeur_id: chauffeurId,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracy: location.accuracy,
+      timestamp: location.timestamp,
+    });
+
+    console.log('🔄 Diffusion position via WebSocket');
+
+    res.json({
+      success: true,
+      message: 'Position enregistrée',
+      data: {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        timestamp: location.timestamp,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Erreur enregistrement position:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur',
+    });
+  }
+});
+
+// Récupérer toutes les positions actives (secrétaire)
 router.get('/active', async (req, res) => {
   try {
     if (req.user.role !== 'secretaire') {
@@ -62,6 +133,7 @@ router.get('/active', async (req, res) => {
   }
 });
 
+// Récupérer la dernière position d'un chauffeur
 router.get('/chauffeur/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -71,7 +143,7 @@ router.get('/chauffeur/:id', async (req, res) => {
     }
 
     const position = await Location.getLatestByChauffeurId(id);
-    
+
     if (!position) {
       return res.status(404).json({ error: 'Aucune position trouvée' });
     }
@@ -83,6 +155,7 @@ router.get('/chauffeur/:id', async (req, res) => {
   }
 });
 
+// Récupérer l'historique des positions
 router.get('/history/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -100,6 +173,7 @@ router.get('/history/:id', async (req, res) => {
   }
 });
 
+// Marquer la position comme inactive (déconnexion chauffeur)
 router.post('/disconnect', async (req, res) => {
   try {
     const chauffeurId = req.user.id;
