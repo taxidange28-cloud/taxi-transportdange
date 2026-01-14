@@ -9,7 +9,26 @@ router.use(verifyToken);
 router.post('/update', async (req, res) => {
   try {
     const { latitude, longitude, accuracy, speed, heading } = req.body;
+    
+    // Log pour debug
+    console.log('📍 Requête géolocalisation reçue');
+    console.log('   User:', req.user);
+    console.log('   Body:', { latitude, longitude, accuracy });
+
+    if (!req.user) {
+      console.error('❌ req.user est undefined - token manquant ?');
+      return res.status(401).json({ error: 'Non authentifié' });
+    }
+
     const chauffeurId = req.user.id;
+    
+    if (!chauffeurId) {
+      console.error('❌ chauffeurId est undefined - req.user.id manquant');
+      return res.status(400).json({ error: 'ID chauffeur manquant' });
+    }
+
+    console.log('   Chauffeur ID:', chauffeurId);
+    console.log('   Role:', req.user.role);
 
     if (!latitude || !longitude) {
       return res.status(400).json({ error: 'Latitude et longitude requises' });
@@ -29,6 +48,8 @@ router.post('/update', async (req, res) => {
       is_active: true,
     });
 
+    console.log('✅ Position enregistrée:', location.id);
+
     const io = req.app.get('io');
     io.emit('geolocation:update', {
       chauffeur_id: chauffeurId,
@@ -38,13 +59,13 @@ router.post('/update', async (req, res) => {
       timestamp: location.timestamp,
     });
 
-    res.json({
-      success: true,
+    res.json({ 
+      success: true, 
       message: 'Position enregistrée',
-      location,
+      location 
     });
   } catch (error) {
-    console.error('Erreur update position:', error);
+    console.error('❌ Erreur enregistrement position:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
