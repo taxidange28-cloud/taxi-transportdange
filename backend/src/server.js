@@ -20,11 +20,10 @@ const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
 const geolocationRoutes = require('./routes/geolocation');
 const { runMigrations } = require('./utils/runMigrations');
-
 const app = express();
 const server = http.createServer(app);
 const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
-
+const debugRoutes = require('./routes/debug');
 const corsOptions = {
   origin:  process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:3001',
@@ -52,7 +51,7 @@ app.use(helmet({
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use('/api/debug', debugRoutes);
 // ✅ Rate limiters par route (CORRIGÉ pour GPS 5 minutes)
 
 // Rate limiter strict pour le login (éviter les attaques brute force)
