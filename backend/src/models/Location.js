@@ -1,3 +1,11 @@
+static async create(data) {
+  const { chauffeur_id, latitude, longitude, accuracy, speed, heading, is_active } = data;
+
+  // 🚨 Ajoute cette vérification :
+  if (!chauffeur_id) {
+    console.error('❌ chauffeur_id manquant ou invalide lors de l\'enregistrement de la position GPS !');
+    throw new Error('chauffeur_id manquant ou invalide');
+  }
 const { pool } = require('../config/database');
 
 class Location {
