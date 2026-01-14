@@ -59,7 +59,7 @@ class Location {
     `;
     try {
       const result = await pool.query(query);
-      console.log(\`📍 \${result.rows.length} position(s) active(s) récupérée(s)\`);
+      console.log(`📍 ${result.rows.length} position(s) active(s) récupérée(s)`);
       return result.rows;
     } catch (error) {
       console.error('❌ Erreur récupération positions actives:', error.message);
@@ -92,7 +92,7 @@ class Location {
     `;
     try {
       const result = await pool.query(query, [chauffeurId]);
-      console.log(\`🛑 Position(s) marquée(s) inactive(s) pour chauffeur \${chauffeurId}\`);
+      console.log(`🛑 Position(s) marquée(s) inactive(s) pour chauffeur ${chauffeurId}`);
       return result.rows;
     } catch (error) {
       console.error('❌ Erreur marquage inactif:', error.message);
@@ -108,7 +108,7 @@ class Location {
     `;
     try {
       const result = await pool.query(query);
-      console.log(\`🗑️ \${result.rows[0]?.deleted_count || 0} position(s) supprimée(s)\`);
+      console.log(`🗑️ ${result.rows[0]?.deleted_count || 0} position(s) supprimée(s)`);
       return result.rows[0];
     } catch (error) {
       console.error('❌ Erreur nettoyage positions:', error.message);
