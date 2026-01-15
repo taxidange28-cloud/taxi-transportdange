@@ -21,11 +21,15 @@ const notificationRoutes = require('./routes/notifications');
 const geolocationRoutes = require('./routes/geolocation');
 const { runMigrations } = require('./utils/runMigrations');
 const app = express();
+
+// ✅ Correction principale pour Render/proxy :
+app.set('trust proxy', 1); // <-- AJOUT ESSENTIEL, à placer après la création de app
+
 const server = http.createServer(app);
 const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
 const debugRoutes = require('./routes/debug');
 const corsOptions = {
-  origin:  process.env.CORS_ORIGINS?.split(',') || [
+  origin: process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:3001',
     'http://localhost:3002',
     'http://localhost:5173',
@@ -52,26 +56,25 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/debug', debugRoutes);
-// ✅ Rate limiters par route (CORRIGÉ pour GPS 5 minutes)
 
 // Rate limiter strict pour le login (éviter les attaques brute force)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 tentatives de login max
   message: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes.',
-  skipSuccessfulRequests: true, // Ne compte pas les connexions réussies
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// ✅ Rate limiter souple pour le GPS (CORRIGÉ :  10 positions / 30 min)
+// Rate limiter souple pour le GPS (10 positions / 30 min)
 const gpsLimiter = rateLimit({
-  windowMs:  30 * 60 * 1000, // ✅ 30 minutes (au lieu de 15)
-  max: 10, // ✅ 10 positions max (au lieu de 5)
+  windowMs: 30 * 60 * 1000, // 30 minutes
+  max: 10,
   message: 'Trop de mises à jour GPS, veuillez patienter.',
   standardHeaders: true,
   legacyHeaders: false,
-  handler:  (req, res) => {
+  handler: (req, res) => {
     console.warn(`⚠️ Rate limit GPS atteint pour IP ${req.ip}`);
     res.status(429).json({
       success: false,
@@ -84,13 +87,13 @@ const gpsLimiter = rateLimit({
 // Rate limiter général (très souple)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // 300 requêtes en 15 min (beaucoup plus souple)
+  max: 300,
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
-  legacyHeaders:  false,
+  legacyHeaders: false,
 });
 
-// Application des limiters par route (AVANT les autres routes)
+// Application des limiters par route
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/geolocation/position', gpsLimiter);
 app.use('/api/geolocation/update', gpsLimiter);
@@ -160,9 +163,8 @@ initializeFirebase();
 const createAdminIfNotExists = async () => {
   try {
     const result = await pool.query("SELECT * FROM utilisateurs WHERE username = 'admin' AND role = 'admin'");
-    
     if (result.rows.length === 0) {
-      const hashedPassword = await bcrypt. hash('admin77281670', 10);
+      const hashedPassword = await bcrypt.hash('admin77281670', 10);
       await pool.query(
         "INSERT INTO utilisateurs (username, password, role, created_at) VALUES ($1, $2, $3, NOW())",
         ['admin', hashedPassword, 'admin']
@@ -185,8 +187,8 @@ const createAdminIfNotExists = async () => {
 createAdminIfNotExists()
   .then(() => runMigrations())
   .then(() => {
-    server.listen(process. env.PORT || 3000, () => {
-      console. log('\n═══════════════════════════════════════════════');
+    server.listen(process.env.PORT || 3000, () => {
+      console.log('\n═══════════════════════════════════════════════');
       console.log('🚕 Transport DanGE - Backend API');
       console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 3000}`);
       console.log('📊 Rate limiting configuré: ');
