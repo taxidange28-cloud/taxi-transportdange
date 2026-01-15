@@ -2,19 +2,18 @@ const jwt = require('jsonwebtoken');
 const Utilisateur = require('../models/Utilisateur');
 const Chauffeur = require('../models/Chauffeur');
 
-// Middleware pour vérifier le token JWT
+// Middleware POUR vérifier le token JWT
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Token non fourni' });
     }
-
     const token = authHeader.substring(7);
-
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // Patch: supporte .id et .userId (anciens tokens)
+      decoded.id = decoded.id || decoded.userId;
       req.user = decoded;
       next();
     } catch (error) {
@@ -45,11 +44,12 @@ const requireChauffeur = (req, res, next) => {
 // Middleware pour charger les informations utilisateur complètes
 const loadUserData = async (req, res, next) => {
   try {
+    // Utilise toujours req.user.id selon la convention fixée
     if (req.user.role === 'secretaire') {
-      const utilisateur = await Utilisateur.findById(req.user.userId);
+      const utilisateur = await Utilisateur.findById(req.user.id);
       req.userData = utilisateur;
     } else if (req.user.role === 'chauffeur') {
-      const chauffeur = await Chauffeur.findById(req.user.userId);
+      const chauffeur = await Chauffeur.findById(req.user.id);
       req.userData = chauffeur;
     }
     next();
