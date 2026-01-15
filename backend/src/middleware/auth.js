@@ -12,9 +12,11 @@ const verifyToken = async (req, res, next) => {
     const token = authHeader.substring(7);
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      // Patch: supporte .id et .userId (anciens tokens)
+      // PATCH: Toujours utiliser le champ 'id', rétro-compatible avec 'userId'
       decoded.id = decoded.id || decoded.userId;
       req.user = decoded;
+      // Log utile en debug
+      // console.log("🔐 [verifyToken] - Payload JWT:", decoded);
       next();
     } catch (error) {
       return res.status(401).json({ error: 'Token invalide ou expiré' });
