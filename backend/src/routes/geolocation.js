@@ -3,14 +3,13 @@ const router = express.Router();
 const Location = require('../models/Location');
 const { verifyToken } = require('../middleware/auth');
 
+// Toujours vérifier le token (auth) sur toutes les routes ici
 router.use(verifyToken);
 
-// Route POST pour mettre à jour la position (nom original)
+// Mise à jour de position par le chauffeur (ancienne route, toujours supportée)
 router.post('/update', async (req, res) => {
   try {
     const { latitude, longitude, accuracy, speed, heading } = req.body;
-    
-    // Log pour debug
     console.log('📍 Requête géolocalisation reçue');
     console.log('   User:', req.user);
     console.log('   Body:', { latitude, longitude, accuracy });
@@ -19,21 +18,14 @@ router.post('/update', async (req, res) => {
       console.error('❌ req.user est undefined - token manquant ?');
       return res.status(401).json({ error: 'Non authentifié' });
     }
-
     const chauffeurId = req.user.id;
-    
     if (!chauffeurId) {
       console.error('❌ chauffeurId est undefined - req.user.id manquant');
       return res.status(400).json({ error: 'ID chauffeur manquant' });
     }
-
-    console.log('   Chauffeur ID:', chauffeurId);
-    console.log('   Role:', req.user.role);
-
     if (!latitude || !longitude) {
       return res.status(400).json({ error: 'Latitude et longitude requises' });
     }
-
     if (req.user.role !== 'chauffeur') {
       return res.status(403).json({ error: 'Réservé aux chauffeurs' });
     }
@@ -50,6 +42,7 @@ router.post('/update', async (req, res) => {
 
     console.log('✅ Position enregistrée:', location.id);
 
+    // Diffusion websocket
     const io = req.app.get('io');
     io.emit('geolocation:update', {
       chauffeur_id: chauffeurId,
@@ -70,19 +63,17 @@ router.post('/update', async (req, res) => {
   }
 });
 
-// Route POST pour envoyer la position (alias pour le frontend chauffeur)
+// Alias : envoi de position POST (nouvelle route préférée)
 router.post('/position', async (req, res) => {
   try {
     const { latitude, longitude, precision } = req.body;
     const chauffeurId = req.user.id;
-
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
         error: 'Latitude et longitude requises',
       });
     }
-
     if (req.user.role !== 'chauffeur') {
       return res.status(403).json({
         success: false,
@@ -108,7 +99,7 @@ router.post('/position', async (req, res) => {
       precision: location.accuracy,
     });
 
-    // Diffuser via WebSocket
+    // Diffusion via WebSocket
     const io = req.app.get('io');
     io.emit('geolocation:update', {
       chauffeur_id: chauffeurId,
@@ -117,8 +108,6 @@ router.post('/position', async (req, res) => {
       accuracy: location.accuracy,
       timestamp: location.timestamp,
     });
-
-    console.log('🔄 Diffusion position via WebSocket');
 
     res.json({
       success: true,
@@ -139,13 +128,12 @@ router.post('/position', async (req, res) => {
   }
 });
 
-// Récupérer toutes les positions actives (secrétaire)
+// Récupérer toutes les positions actives (pour secrétaire)
 router.get('/active', async (req, res) => {
   try {
     if (req.user.role !== 'secretaire') {
       return res.status(403).json({ error: 'Réservé aux secrétaires' });
     }
-
     const positions = await Location.getAllActivePositions();
     res.json({ positions });
   } catch (error) {
@@ -154,21 +142,17 @@ router.get('/active', async (req, res) => {
   }
 });
 
-// Récupérer la dernière position d'un chauffeur
+// Récupère la dernière position d'un chauffeur donné
 router.get('/chauffeur/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
     if (req.user.role !== 'secretaire' && req.user.id !== parseInt(id)) {
       return res.status(403).json({ error: 'Accès non autorisé' });
     }
-
     const position = await Location.getLatestByChauffeurId(id);
-
     if (!position) {
       return res.status(404).json({ error: 'Aucune position trouvée' });
     }
-
     res.json({ position });
   } catch (error) {
     console.error('Erreur récupération position chauffeur:', error);
@@ -176,16 +160,14 @@ router.get('/chauffeur/:id', async (req, res) => {
   }
 });
 
-// Récupérer l'historique des positions
+// Historique des positions pour un chauffeur (admin/secrétaire)
 router.get('/history/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const limit = parseInt(req.query.limit) || 50;
-
     if (req.user.role !== 'secretaire') {
       return res.status(403).json({ error: 'Réservé aux secrétaires' });
     }
-
     const history = await Location.getHistory(id, limit);
     res.json({ history });
   } catch (error) {
@@ -194,20 +176,16 @@ router.get('/history/:id', async (req, res) => {
   }
 });
 
-// Marquer la position comme inactive (déconnexion chauffeur)
+// Déconnexion/désactivation de la position (chauffeur)
 router.post('/disconnect', async (req, res) => {
   try {
     const chauffeurId = req.user.id;
-
     if (req.user.role !== 'chauffeur') {
       return res.status(403).json({ error: 'Réservé aux chauffeurs' });
     }
-
     await Location.setInactive(chauffeurId);
-
     const io = req.app.get('io');
     io.emit('geolocation:chauffeur-offline', { chauffeur_id: chauffeurId });
-
     res.json({ success: true, message: 'Position marquée inactive' });
   } catch (error) {
     console.error('Erreur déconnexion:', error);
