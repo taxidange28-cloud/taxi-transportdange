@@ -8,7 +8,6 @@ const DriverMarker = ({ position, onClick }) => {
   const getMarkerColor = () => {
     const now = new Date();
     const positionAge = (now - new Date(position.timestamp)) / 1000;
-    
     if (positionAge > 300) return '#6B7280';
     if (positionAge > 120) return '#F59E0B';
     return '#10B981';
@@ -17,7 +16,6 @@ const DriverMarker = ({ position, onClick }) => {
   const getStatusText = () => {
     const now = new Date();
     const positionAge = (now - new Date(position.timestamp)) / 1000;
-    
     if (positionAge > 300) return 'Hors ligne';
     if (positionAge > 120) return 'Signal faible';
     return 'En ligne';
@@ -63,10 +61,15 @@ const DriverMarker = ({ position, onClick }) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffSeconds = Math.floor((now - date) / 1000);
-
     if (diffSeconds < 60) return `Il y a ${diffSeconds}s`;
     if (diffSeconds < 3600) return `Il y a ${Math.floor(diffSeconds / 60)}min`;
     return format(date, 'HH:mm', { locale: fr });
+  };
+
+  // 🚩 Ajoute cette fonction pour sécuriser l'affichage des décimales
+  const safeFixed = (val, n = 6) => {
+    const num = Number(val);
+    return isFinite(num) ? num.toFixed(n) : '--';
   };
 
   return (
@@ -79,40 +82,36 @@ const DriverMarker = ({ position, onClick }) => {
     >
       <Popup>
         <div style={{ minWidth: '200px' }}>
-          <div style={{ 
-            fontWeight: 'bold', 
-            fontSize: '16px', 
+          <div style={{
+            fontWeight: 'bold',
+            fontSize: '16px',
             marginBottom: '8px',
             color: '#1F2937'
           }}>
             🚗 {position.chauffeur_nom || position.chauffeur_username}
           </div>
-          
           <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '4px' }}>
             <strong>Statut :</strong>{' '}
             <span style={{ color: getMarkerColor(), fontWeight: 'bold' }}>
               {getStatusText()}
             </span>
           </div>
-          
           <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '4px' }}>
             <strong>Position :</strong> {formatTimestamp(position.timestamp)}
           </div>
-          
           {position.accuracy && (
             <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '4px' }}>
               <strong>Précision :</strong> ±{Math.round(position.accuracy)}m
             </div>
           )}
-          
-          <div style={{ 
-            fontSize: '11px', 
-            color: '#9CA3AF', 
+          <div style={{
+            fontSize: '11px',
+            color: '#9CA3AF',
             marginTop: '8px',
             paddingTop: '8px',
             borderTop: '1px solid #E5E7EB'
           }}>
-            {position.latitude.toFixed(6)}, {position.longitude.toFixed(6)}
+            {safeFixed(position.latitude, 6)}, {safeFixed(position.longitude, 6)}
           </div>
         </div>
       </Popup>
