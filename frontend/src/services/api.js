@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://transport-dange-backend.onrender.com/api';
 
-// Créer une instance axios
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -10,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Intercepteur pour ajouter le token JWT
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -24,12 +22,10 @@ api.interceptors.request.use(
   }
 );
 
-// Intercepteur pour gérer les erreurs
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expiré ou invalide
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -82,7 +78,8 @@ export const getChauffeurs = () =>
 
 export const getMissionsChauffeur = (chauffeurId, filters = {}) => 
   api.get(`/chauffeurs/${chauffeurId}/missions`, { params: filters });
-// Admin - Gestion des utilisateurs
+
+// Admin
 export const adminApi = {
   getUsers: () => api.get('/admin/users'),
   getUser: (id) => api.get(`/admin/users/${id}`),
@@ -91,6 +88,8 @@ export const adminApi = {
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   resetPassword: (id) => api.post(`/admin/users/${id}/reset-password`),
 };
+
+// Geolocation
 export const getActivePositions = () =>
   api.get('/geolocation/active');
 
@@ -99,4 +98,16 @@ export const getChauffeurPosition = (id) =>
 
 export const getChauffeurHistory = (id, limit = 50) =>
   api.get(`/geolocation/history/${id}`, { params: { limit } });
+
 export default api;
+```
+
+**Commit : `fix: Correct syntax errors in api.js (template literals)`**
+
+---
+
+## **PROBLÈME 2 : JWT NE CONTIENT PEUT-ÊTRE PAS "ID"**
+
+**Montrez-moi le fichier de login backend :**
+```
+backend/src/controllers/authController.js
