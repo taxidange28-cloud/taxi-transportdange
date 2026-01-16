@@ -213,7 +213,6 @@ const createAdminIfNotExists = async () => {
 // Démarrage du serveur
 initializeDatabase()
   .then(() => createAdminIfNotExists())
-  .then(() => runMigrations())
   .then(() => {
     server.listen(process.env.PORT || 3000, () => {
       console.log('\n═══════════════════════════════════════════════');
