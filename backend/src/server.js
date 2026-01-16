@@ -5,6 +5,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const { pool } = require('./config/database');
@@ -22,8 +24,7 @@ const geolocationRoutes = require('./routes/geolocation');
 const { runMigrations } = require('./utils/runMigrations');
 const app = express();
 
-// ✅ Correction principale pour Render/proxy :
-app.set('trust proxy', 1); // <-- AJOUT ESSENTIEL, à placer après la création de app
+app.set('trust proxy', 1);
 
 const server = http.createServer(app);
 const chauffeursManageRoutes = require('./routes/chauffeurs-manage');
@@ -47,7 +48,6 @@ const io = socketIo(server, {
   cors: corsOptions,
 });
 
-// Sécurité via HelmetJS
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
@@ -57,19 +57,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/debug', debugRoutes);
 
-// Rate limiter strict pour le login (éviter les attaques brute force)
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 tentatives de login max
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes.',
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Rate limiter souple pour le GPS (10 positions / 30 min)
 const gpsLimiter = rateLimit({
-  windowMs: 30 * 60 * 1000, // 30 minutes
+  windowMs: 30 * 60 * 1000,
   max: 10,
   message: 'Trop de mises à jour GPS, veuillez patienter.',
   standardHeaders: true,
@@ -79,30 +77,26 @@ const gpsLimiter = rateLimit({
     res.status(429).json({
       success: false,
       error: 'Trop de mises à jour GPS, veuillez patienter.',
-      retryAfter: 300, // 5 minutes
+      retryAfter: 300,
     });
   },
 });
 
-// Rate limiter général (très souple)
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 300,
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Application des limiters par route
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/geolocation/position', gpsLimiter);
 app.use('/api/geolocation/update', gpsLimiter);
 app.use('/api/', generalLimiter);
 
-// Configuration de Socket.io
 app.set('io', io);
 
-// Initialisation des routes
 app.use('/api/auth', authRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/chauffeurs', chauffeurRoutes);
@@ -114,7 +108,6 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/geolocation', geolocationRoutes);
 app.use('/api', initRoutes);
 
-// Contrôle de santé API
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -123,12 +116,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Middleware pour les routes non trouvées
 app.use((req, res) => {
   res.status(404).json({ error: 'Route non trouvée' });
 });
 
-// Gestionnaire global des erreurs
 app.use((err, req, res, next) => {
   console.error('Erreur:', err);
   res.status(err.status || 500).json({
@@ -136,7 +127,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Configuration des événements WebSocket
 io.on('connection', (socket) => {
   console.log('✅ Client WebSocket connecté:', socket.id);
 
@@ -149,17 +139,54 @@ io.on('connection', (socket) => {
     console.log(`Client ${socket.id} a rejoint la room ${room}`);
   });
 
-  // ✅ Répondre aux pings pour maintenir la connexion
   socket.on('ping', () => {
     socket.emit('pong');
     console.log('💚 Pong envoyé au client', socket.id);
   });
 });
 
-// Initialisation de Firebase
 initializeFirebase();
 
-// Création automatique d'un compte administrateur (s'il n'existe pas)
+// Fonction d'initialisation de la base de données
+const initializeDatabase = async () => {
+  try {
+    console.log('🔄 Vérification de la base de données...');
+    
+    // Vérifier si les tables existent
+    const tableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'utilisateurs'
+      );
+    `);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('📋 Création du schéma de base de données...');
+      
+      // Exécuter schema.sql
+      const schemaPath = path.join(__dirname, '../schema.sql');
+      if (fs.existsSync(schemaPath)) {
+        const schema = fs.readFileSync(schemaPath, 'utf8');
+        await pool.query(schema);
+        console.log('✅ Schéma créé avec succès');
+      }
+      
+      // Exécuter data.sql
+      const dataPath = path.join(__dirname, '../data.sql');
+      if (fs.existsSync(dataPath)) {
+        const data = fs.readFileSync(dataPath, 'utf8');
+        await pool.query(data);
+        console.log('✅ Données initiales insérées');
+      }
+    } else {
+      console.log('✅ Base de données déjà initialisée');
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'initialisation de la base:', error);
+    throw error;
+  }
+};
+
 const createAdminIfNotExists = async () => {
   try {
     const result = await pool.query("SELECT * FROM utilisateurs WHERE username = 'admin' AND role = 'admin'");
@@ -184,7 +211,8 @@ const createAdminIfNotExists = async () => {
 };
 
 // Démarrage du serveur
-createAdminIfNotExists()
+initializeDatabase()
+  .then(() => createAdminIfNotExists())
   .then(() => runMigrations())
   .then(() => {
     server.listen(process.env.PORT || 3000, () => {
@@ -203,7 +231,6 @@ createAdminIfNotExists()
     process.exit(1);
   });
 
-// Gestion des interruptions (SIGTERM et SIGINT)
 const gracefulShutdown = () => {
   console.log('Arrêt du serveur en cours...');
   server.close(() => {
