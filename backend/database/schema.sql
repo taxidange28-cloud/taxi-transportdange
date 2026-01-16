@@ -98,3 +98,17 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER calculate_duration_trigger BEFORE INSERT OR UPDATE ON missions
     FOR EACH ROW EXECUTE FUNCTION calculate_mission_duration();
+
+-- Table positions GPS
+CREATE TABLE positions_gps (
+    id SERIAL PRIMARY KEY,
+    chauffeur_id INTEGER REFERENCES chauffeurs(id) ON DELETE CASCADE,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    accuracy DECIMAL(10, 2),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_positions_chauffeur ON positions_gps(chauffeur_id);
+CREATE INDEX idx_positions_timestamp ON positions_gps(timestamp);
