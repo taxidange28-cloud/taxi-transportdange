@@ -53,6 +53,7 @@ Créer un fichier `.env` à la racine :
 ```env
 VITE_API_URL=https://taxi-transportdange.onrender.com/api
 ```
+attention mettre railway si l'app est dans railway
 
 Pour le développement local :
 ```env
