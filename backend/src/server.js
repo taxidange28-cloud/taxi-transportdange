@@ -21,7 +21,6 @@ const initRoutes = require('./routes/initRoutes');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
 const geolocationRoutes = require('./routes/geolocation');
-const { runMigrations } = require('./utils/runMigrations');
 const app = express();
 
 app.set('trust proxy', 1);
@@ -147,12 +146,10 @@ io.on('connection', (socket) => {
 
 initializeFirebase();
 
-// Fonction d'initialisation de la base de données
 const initializeDatabase = async () => {
   try {
     console.log('🔄 Vérification de la base de données...');
     
-    // Vérifier si les tables existent
     const tableCheck = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -161,28 +158,34 @@ const initializeDatabase = async () => {
     `);
     
     if (!tableCheck.rows[0].exists) {
-      console.log('📋 Création du schéma de base de données...');
+      console.log('📋 Initialisation de la base de données...');
       
-      // Exécuter schema.sql
-      const schemaPath = path.join(__dirname, '../schema.sql');
-      if (fs.existsSync(schemaPath)) {
-        const schema = fs.readFileSync(schemaPath, 'utf8');
-        await pool.query(schema);
-        console.log('✅ Schéma créé avec succès');
+      const initSqlPath = path.join(__dirname, '../database/init.sql');
+      if (!fs.existsSync(initSqlPath)) {
+        throw new Error('Fichier init.sql introuvable à ' + initSqlPath);
       }
       
-      // Exécuter data.sql
-      const dataPath = path.join(__dirname, '../data.sql');
-      if (fs.existsSync(dataPath)) {
-        const data = fs.readFileSync(dataPath, 'utf8');
-        await pool.query(data);
-        console.log('✅ Données initiales insérées');
+      const initSql = fs.readFileSync(initSqlPath, 'utf8');
+      
+      const statements = initSql
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s.length > 0 && !s.startsWith('--'));
+      
+      for (const statement of statements) {
+        try {
+          await pool.query(statement);
+        } catch (err) {
+          console.error('Erreur SQL:', err.message);
+        }
       }
+      
+      console.log('✅ Base de données initialisée');
     } else {
       console.log('✅ Base de données déjà initialisée');
     }
   } catch (error) {
-    console.error('❌ Erreur lors de l\'initialisation de la base:', error);
+    console.error('❌ Erreur initialisation:', error.message);
     throw error;
   }
 };
@@ -210,7 +213,6 @@ const createAdminIfNotExists = async () => {
   }
 };
 
-// Démarrage du serveur
 initializeDatabase()
   .then(() => createAdminIfNotExists())
   .then(() => {
